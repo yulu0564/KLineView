@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center_horizontal"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/tv_k_line1"
+        android:layout_width="100dp"
+        android:layout_height="35dp"
+        android:layout_marginTop="30dp"
+        android:background="@color/colorAccent"
+        android:gravity="center"
+        android:text="K线1" />
+
+    <TextView
+        android:id="@+id/tv_k_line2"
+        android:layout_width="100dp"
+        android:layout_height="35dp"
+        android:layout_marginTop="15dp"
+        android:background="@color/colorAccent"
+        android:gravity="center"
+        android:text="K线2" />
+
+    <TextView
+        android:id="@+id/tv_time_line1"
+        android:layout_width="100dp"
+        android:layout_height="35dp"
+        android:layout_marginTop="15dp"
+        android:background="@color/colorAccent"
+        android:gravity="center"
+        android:text="分时线1" />
+
+    <TextView
+        android:id="@+id/tv_time_line2"
+        android:layout_width="100dp"
+        android:layout_height="35dp"
+        android:layout_marginTop="15dp"
+        android:background="@color/colorAccent"
+        android:gravity="center"
+        android:text="分时线2" />
+</LinearLayout>
