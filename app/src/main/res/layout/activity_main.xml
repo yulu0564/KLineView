@@ -40,4 +40,22 @@
         android:background="@color/colorAccent"
         android:gravity="center"
         android:text="分时线2" />
+
+    <!--<android.support.constraint.ConstraintLayout-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_margin="10dp">-->
+
+        <!--<TextView-->
+            <!--android:id="@+id/textView1"-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:text="购房地偶过过过过过过过过过军过分过分过分费大幅度辅导费放大缩放的"/>-->
+        <!--<TextView-->
+            <!--android:id="@+id/textView2"-->
+            <!--app:layout_constraintStart_toEndOf ="@id/textView1"-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:text="地方到辅导费fdfdgfgfg过分过分过分费大幅度辅导费放大缩放的过分过分过分费大幅度辅导费放大缩放的"/>-->
+    <!--</android.support.constraint.ConstraintLayout>-->
 </LinearLayout>
