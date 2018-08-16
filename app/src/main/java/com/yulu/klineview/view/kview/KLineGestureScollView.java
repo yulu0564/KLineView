@@ -24,9 +24,9 @@ public class KLineGestureScollView extends KLineScollView {
     }
 
     @Override
-    protected void initBaseKline() {
+    protected void initBaseKline(AttributeSet attrs) {
         mGestureDetector = new GestureDetector(mContext, new GestureListener());
-        super.initBaseKline();
+        super.initBaseKline(attrs);
     }
 
     @Override
@@ -165,7 +165,7 @@ public class KLineGestureScollView extends KLineScollView {
                     invalidate();
                 }
             } else {
-                if (quotationBeanList.size() <= horizontalNum) {
+                if (mDatas.size() <= horizontalNum) {
                     return super.onScroll(e1, e2, distanceX, distanceY);
                 }
                 if (distanceX < 0) {

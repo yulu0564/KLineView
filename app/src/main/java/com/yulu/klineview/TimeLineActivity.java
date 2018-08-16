@@ -31,22 +31,11 @@ public class TimeLineActivity extends AppCompatActivity {
         Type resultType = new TypeToken<List<List<String>>>() {
         }.getType();
         List<List<String>> datas = new Gson().fromJson(a, resultType);
-        List<QuotationBean> quotationBeanList = new ArrayList<>();
-        for (List<String> list : datas) {
-            QuotationBean mQuotationBean = new QuotationBean();
-            mQuotationBean.setTime(DateUtils.getLongTime(list.get(0),"yyyyMMddHHmmss"));
-            mQuotationBean.setLastClose(Long.parseLong(datas.get(0).get(1))/100.0f);
-            mQuotationBean.setOpen(Long.parseLong(list.get(2))/100.0f);
-            mQuotationBean.setClose(Long.parseLong(list.get(3))/100.0f);
-            mQuotationBean.setHigh(Long.parseLong(list.get(4))/100.0f);
-            mQuotationBean.setLow(Long.parseLong(list.get(5))/100.0f);
-            mQuotationBean.setVolume(Long.parseLong(list.get(6)));
-            mQuotationBean.setAmount(Long.parseLong(list.get(7)));
-            quotationBeanList.add(mQuotationBean);
-        }
+        TimeAdapter timeAdapter = new TimeAdapter();
+        timeAdapter.setData(datas);
         mKLineStockView.setColorCanvas(Color.BLACK);
         mKLineStockView.setTextDefaultColor(Color.WHITE);
-        mKLineStockView.setData(quotationBeanList);
-//        String b = new Gson().toJson(quotationBeanList);
+
+        mKLineStockView.setAdapter(timeAdapter);
     }
 }

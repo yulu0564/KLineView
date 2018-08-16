@@ -18,11 +18,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * K线基础数据
+ * 分时基础数据
  */
 
 public abstract class BaseTimeLineView extends BaseStockView {
-    protected List<QuotationBean> mDatas = new ArrayList<QuotationBean>(); // 分时数据
 
     protected double maxTime = 0; // 坐标最大值
     protected double minTime = 0; // 坐标最小值
@@ -284,83 +283,69 @@ public abstract class BaseTimeLineView extends BaseStockView {
         taggingBottomPaths.add(mBottomPath);
     }
 
-    public List<QuotationBean> getData() {
-        return mDatas;
-    }
-
-    public void cleanData() {
-        mDatas.clear();
-        onRefresh(true);
-    }
-
-    public void setData(List<QuotationBean> quotationBeanList) {
-        this.mDatas = quotationBeanList;
-        onRefresh(false);
-    }
-
-    public void addData(List<QuotationBean> quotationBeanList) {
-        boolean isRefreshTop = false;
-        boolean isRefreshBottom = false;
-        if (mDatas.size() > 0) {
-            if (!isEqual) {
-                QuotationBean mQuotationBean = quotationBeanList.get(mDatas.size() - 1);
-                if (mQuotationBean.getClose() < maxTime && mQuotationBean.getClose() > minTime) {
-                    taggingTopPaths.remove(this.taggingTopPaths.get(this.taggingTopPaths.size() - 1));
-                    taggingAvePaths.remove(this.taggingAvePaths.get(this.taggingAvePaths.size() - 1));
-                    amuont -= mQuotationBean.getAmount();
-                    volume -= mQuotationBean.getVolume();
-                } else {
-                    isRefreshTop = true;
-                }
-                if (mQuotationBean.getVolume() >= maxFT) {
-                    isRefreshBottom = true;
-                }
-            } else {
-                isRefreshTop = true;
-            }
-            quotationBeanList.remove(mDatas.get(mDatas.size() - 1));
-        }
-        int oldSize = mDatas.size();
-        mDatas.addAll(quotationBeanList);
-        if (!(isRefreshTop && isRefreshBottom)) {
-            for (int i = 0; i < quotationBeanList.size(); i++) {
-                QuotationBean mQuotationBean = quotationBeanList.get(i);
-                if (mQuotationBean.getClose() >= 0) {
-                    float x = (2 * (i + oldSize) + 1) * timeWidth + topRect.left;
-                    if (!isRefreshTop) {
-                        if (mQuotationBean.getClose() > maxTime) {
-                            maxTime = mQuotationBean.getClose();
-                            isRefreshTop = true;
-                        } else if (mQuotationBean.getClose() < minTime) {
-                            minTime = mQuotationBean.getClose();
-                            isRefreshTop = true;
-                        } else {
-                            addTopPath(mQuotationBean, x);
-                            addAvePrice(mQuotationBean, x);
-                        }
-                    }
-                    if (!isRefreshBottom) {
-                        if (mQuotationBean.getVolume() > maxFT) {
-                            maxFT = mQuotationBean.getVolume();
-                            isRefreshBottom = true;
-                        } else {
-                            addBottomPath(mQuotationBean, x);
-                        }
-                    }
-                }
-            }
-        }
-        if (isRefreshTop && isRefreshBottom) {
-            initTimeMaxAndMin();
-            initPaths();
-        } else if (isRefreshTop) {
-            initTimeMaxAndMin();
-            initTopPaths();
-        } else if (isRefreshBottom) {
-            initBottomPaths();
-        }
-        invalidate();
-    }
+//    public void addData(List<QuotationBean> quotationBeanList) {
+//        boolean isRefreshTop = false;
+//        boolean isRefreshBottom = false;
+//        if (mDatas.size() > 0) {
+//            if (!isEqual) {
+//                QuotationBean mQuotationBean = quotationBeanList.get(mDatas.size() - 1);
+//                if (mQuotationBean.getClose() < maxTime && mQuotationBean.getClose() > minTime) {
+//                    taggingTopPaths.remove(this.taggingTopPaths.get(this.taggingTopPaths.size() - 1));
+//                    taggingAvePaths.remove(this.taggingAvePaths.get(this.taggingAvePaths.size() - 1));
+//                    amuont -= mQuotationBean.getAmount();
+//                    volume -= mQuotationBean.getVolume();
+//                } else {
+//                    isRefreshTop = true;
+//                }
+//                if (mQuotationBean.getVolume() >= maxFT) {
+//                    isRefreshBottom = true;
+//                }
+//            } else {
+//                isRefreshTop = true;
+//            }
+//            quotationBeanList.remove(mDatas.get(mDatas.size() - 1));
+//        }
+//        int oldSize = mDatas.size();
+//        mDatas.addAll(quotationBeanList);
+//        if (!(isRefreshTop && isRefreshBottom)) {
+//            for (int i = 0; i < quotationBeanList.size(); i++) {
+//                QuotationBean mQuotationBean = quotationBeanList.get(i);
+//                if (mQuotationBean.getClose() >= 0) {
+//                    float x = (2 * (i + oldSize) + 1) * timeWidth + topRect.left;
+//                    if (!isRefreshTop) {
+//                        if (mQuotationBean.getClose() > maxTime) {
+//                            maxTime = mQuotationBean.getClose();
+//                            isRefreshTop = true;
+//                        } else if (mQuotationBean.getClose() < minTime) {
+//                            minTime = mQuotationBean.getClose();
+//                            isRefreshTop = true;
+//                        } else {
+//                            addTopPath(mQuotationBean, x);
+//                            addAvePrice(mQuotationBean, x);
+//                        }
+//                    }
+//                    if (!isRefreshBottom) {
+//                        if (mQuotationBean.getVolume() > maxFT) {
+//                            maxFT = mQuotationBean.getVolume();
+//                            isRefreshBottom = true;
+//                        } else {
+//                            addBottomPath(mQuotationBean, x);
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//        if (isRefreshTop && isRefreshBottom) {
+//            initTimeMaxAndMin();
+//            initPaths();
+//        } else if (isRefreshTop) {
+//            initTimeMaxAndMin();
+//            initTopPaths();
+//        } else if (isRefreshBottom) {
+//            initBottomPaths();
+//        }
+//        invalidate();
+//    }
 
     public int getRTPriceArcColor() {
         return RTPriceArcColor;
@@ -402,23 +387,8 @@ public abstract class BaseTimeLineView extends BaseStockView {
         mOnClickSurfaceListener = l;
     }
 
-    /**
-     * 刷新数据
-     */
-    public void onRefresh(boolean isStart) {
-        if (isStart) {
-            initData();
-        } else {
-            post(new Runnable() {
-                @Override
-                public void run() {
-                    initData();
-                }
-            });
-        }
-    }
-
-    private void initData() {
+    @Override
+    protected void initData() {
         setTimeMaxAndMin();
         isShowIndicateLine = false;
         initPaths();

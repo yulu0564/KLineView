@@ -48,16 +48,16 @@ public class KLineScollView extends BaseKlineView {
         super.onSizeChanged(w, h, oldw, oldh);
         horizontalNum = (int) Math.floor(topRect.width() / kLWidth);
         updateTaggingCoordinate();
-        offsetWidthMax = (int) Math.floor(quotationBeanList.size() * kLWidth - topRect.width());
+        offsetWidthMax = (int) Math.floor(mDatas.size() * kLWidth - topRect.width());
         setOffsetWidth(offsetWidthMax);
     }
 
     @Override
-    protected void initBaseKline() {
+    protected void initBaseKline(AttributeSet attrs) {
         setkLWidth(dip2px(10));
         setMaxKLwidth(dip2px(50));
         setMinKLwidth(dip2px(2));
-        super.initBaseKline();
+        super.initBaseKline(attrs);
     }
 
     @Override
@@ -165,7 +165,7 @@ public class KLineScollView extends BaseKlineView {
         lastX = -1; // 绘图时X的历史值
         float startX = bottomRect.left + offset * kLWidth;
         for (int i = offset; i < maxWidthNum; i++) {
-            QuotationBean mQuotationBean = quotationBeanList.get(i);
+            QuotationBean mQuotationBean = mDatas.get(i);
             double open = mQuotationBean.getOpen(); // 开盘价
             double close = mQuotationBean.getClose(); // 收盘价
             double high = mQuotationBean.getHigh(); // 最高价
@@ -244,12 +244,12 @@ public class KLineScollView extends BaseKlineView {
 
     protected void setOffsetWidth(int offsetWidth) {
         this.offsetWidth = offsetWidth;
-        if (quotationBeanList.size() > horizontalNum) {
+        if (mDatas.size() > horizontalNum) {
             offset = (int) Math.floor(offsetWidth / kLWidth);
             maxWidthNum = (int) Math.ceil((offsetWidth + topRect.width()) / kLWidth);
         } else {
             offset = 0;
-            maxWidthNum = quotationBeanList.size();
+            maxWidthNum = mDatas.size();
         }
         setKLMaxAndMin();
         scrollTo(offsetWidth, 0);
@@ -259,12 +259,12 @@ public class KLineScollView extends BaseKlineView {
      * 设置K线坐标的最大和最小值
      */
     public void setKLMaxAndMin() {
-        minKL = quotationBeanList.get(offset).getLow();
-        maxKL = quotationBeanList.get(offset).getHigh();
+        minKL = mDatas.get(offset).getLow();
+        maxKL = mDatas.get(offset).getHigh();
         minFT = 0;
-        maxFT = quotationBeanList.get(offset).getAmount();
+        maxFT = mDatas.get(offset).getAmount();
         for (int i = offset; i < maxWidthNum; i++) {
-            QuotationBean mQuotationBean = quotationBeanList.get(i);
+            QuotationBean mQuotationBean = mDatas.get(i);
             minKL = minKL < mQuotationBean.getLow() ? minKL : mQuotationBean.getLow();
             maxKL = maxKL > mQuotationBean.getHigh() ? maxKL : mQuotationBean
                     .getHigh();
@@ -307,10 +307,10 @@ public class KLineScollView extends BaseKlineView {
 
     public void setkLWidth(final float kLWidth, boolean isRefresh) {
         if (isRefresh) {
-            offsetWidthMax = (int) Math.floor(quotationBeanList.size() * kLWidth - topRect.width());
+            offsetWidthMax = (int) Math.floor(mDatas.size() * kLWidth - topRect.width());
             horizontalNum = (int) Math.floor(topRect.width() / kLWidth);
             int offsetWidth;
-            if (quotationBeanList.size() > horizontalNum) {
+            if (mDatas.size() > horizontalNum) {
                 final int center = (int) Math.ceil((KLineScollView.this.offsetWidth + topRect.width() / 2) / KLineScollView.this.kLWidth);
                 offsetWidth = Math.round(center * kLWidth - topRect.width() / 2);
                 offsetWidth = offsetWidth > offsetWidthMax ? offsetWidthMax : offsetWidth;
@@ -328,7 +328,7 @@ public class KLineScollView extends BaseKlineView {
             post(new Runnable() {
                 @Override
                 public void run() {
-                    offsetWidthMax = (int) Math.floor(quotationBeanList.size() * kLWidth - topRect.width());
+                    offsetWidthMax = (int) Math.floor(mDatas.size() * kLWidth - topRect.width());
                     updateTaggingCoordinate();
                 }
             });
@@ -339,7 +339,7 @@ public class KLineScollView extends BaseKlineView {
     protected float yCutoffWidth;  //最大长度坐标
 
     protected void updateTaggingCoordinate() {
-        yCutoffWidth = kLWidth * quotationBeanList.size();
+        yCutoffWidth = kLWidth * mDatas.size();
         float cutoffWidth = topRect.width() / (yLineNum - 1);
         YcutoffCount = (int) Math.floor(yCutoffWidth * (yLineNum - 1) / topRect.width());
         lastDate = null;
@@ -358,20 +358,20 @@ public class KLineScollView extends BaseKlineView {
                 } else {
                     position = Math.round(x / kLWidth) - 1;
                 }
-                if (position > quotationBeanList.size() - 1) {
-                    position = quotationBeanList.size() - 1;
+                if (position > mDatas.size() - 1) {
+                    position = mDatas.size() - 1;
                 }
                 if (position < 0) {
                     position = 0;
                 }
-                String time = getStockDate(quotationBeanList.get(position).getTime());
+                String time = getStockDate(mDatas.get(position).getTime());
                 mTaggingCoordinate.setText(time);
                 mTaggingCoordinate.setX(x + topRect.left);
                 taggings.add(mTaggingCoordinate);
             }
         } else {
-            if (!quotationBeanList.isEmpty()) {
-                String time = getStockDate(quotationBeanList.get(0).getTime());
+            if (!mDatas.isEmpty()) {
+                String time = getStockDate(mDatas.get(0).getTime());
                 Tagging mTaggingCoordinate = new Tagging();
                 mTaggingCoordinate.setText(time);
                 mTaggingCoordinate.setY(y);

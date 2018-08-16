@@ -17,6 +17,25 @@ public class KLineGestureView extends KLineStockView {
 
     private double nLenStart0, nLenStart1 = 0; // 手势缩放的时候使用
 
+
+    protected boolean isEnableLoadMore = true;
+    protected boolean finishLoadmore = true;
+
+    /**
+     * 加载更多完成
+     */
+    public void finishLoadmore() {
+        finishLoadmore = true;
+    }
+
+    /**
+     * 设置左滑动的时候是否需要加载更多
+     */
+    public void setEnableLoadmore(boolean enableLoadmore) {
+        isEnableLoadMore = enableLoadmore;
+    }
+
+
     public KLineGestureView(Context context) {
         super(context);
         mGestureDetector = new GestureDetector(mContext, new GestureListener());
@@ -32,6 +51,7 @@ public class KLineGestureView extends KLineStockView {
         super(context, attrs, defStyle);
         mGestureDetector = new GestureDetector(mContext, new GestureListener());
     }
+
     private float mDownPosX = 0;
     private float mDownPosY = 0;
 
@@ -47,7 +67,7 @@ public class KLineGestureView extends KLineStockView {
     /**
      * 支持手势
      */
-    private boolean  supportsGestures(MotionEvent event){
+    private boolean supportsGestures(MotionEvent event) {
         if (event.getPointerCount() == 2) {
             closeIndicateLine();
             int xlen = Math.abs((int) event.getX(0)
@@ -69,8 +89,8 @@ public class KLineGestureView extends KLineStockView {
                     valueStock = (int) (topRect.width() / kLWidthArray[kLWidthSub]); // 修改显示数量
                     int centerDeviant = (showQuotationBeanList.size() + valueStock)
                             / 2 + 1 + deviant;
-                    if (centerDeviant < quotationBeanList.size()) {
-                        leftDeviant = quotationBeanList.size()
+                    if (centerDeviant < mDatas.size()) {
+                        leftDeviant = mDatas.size()
                                 - centerDeviant;
                     } else {
                         leftDeviant = 0;
@@ -87,8 +107,9 @@ public class KLineGestureView extends KLineStockView {
                     int centerDeviant = (showQuotationBeanList.size() + valueStock)
                             / 2 + 1 + deviant; // 偏移后最后一个坐标点的坐标
 
-                    if (centerDeviant < quotationBeanList.size()) {
-                        leftDeviant = quotationBeanList.size()
+
+                    if (centerDeviant < mDatas.size()) {
+                        leftDeviant = mDatas.size()
                                 - centerDeviant;
                     } else {
                         leftDeviant = 0;
@@ -108,9 +129,10 @@ public class KLineGestureView extends KLineStockView {
 
     /**
      * 不支持手势
+     *
      * @param event
      */
-    private boolean  notSupportsGestures(MotionEvent event){
+    private boolean notSupportsGestures(MotionEvent event) {
         final float x = event.getX();
         final float y = event.getY();
         final int action = event.getAction();
@@ -138,6 +160,7 @@ public class KLineGestureView extends KLineStockView {
         mGestureDetector.onTouchEvent(event);
         return true;
     }
+
     private void onScroll(MotionEvent e) {
         if (isShowIndicateLine) {
             float x = e.getX();
@@ -162,8 +185,8 @@ public class KLineGestureView extends KLineStockView {
                 valueStock = (int) (topRect.width() / kLWidthArray[kLWidthSub]); // 修改显示数量
                 int centerDeviant = (showQuotationBeanList.size() + valueStock) / 2
                         + 1 + deviant; // 偏移后最后一个坐标点的坐标
-                if (centerDeviant < quotationBeanList.size()) {
-                    leftDeviant = quotationBeanList.size() - centerDeviant;
+                if (centerDeviant < mDatas.size()) {
+                    leftDeviant = mDatas.size() - centerDeviant;
                 } else {
                     leftDeviant = 0;
                 }
@@ -198,20 +221,20 @@ public class KLineGestureView extends KLineStockView {
                 if (distanceX < 0) {
                     // 往左滑动
                     // addDeviant+=1;
-                    if (leftDeviant + valueStock < quotationBeanList.size()) {
-                        if (leftDeviant + addDeviant + valueStock < quotationBeanList
+                    if (leftDeviant + valueStock < mDatas.size()) {
+                        if (leftDeviant + addDeviant + valueStock < mDatas
                                 .size()) {
                             leftDeviant += addDeviant;
                         } else {
-                            leftDeviant = quotationBeanList.size() - valueStock;
+                            leftDeviant = mDatas.size() - valueStock;
                         }
                         invalidate();
                     }
-                    if (isMore
-                            && quotationBeanList.size() != 0
-                            && leftDeviant + valueStock > quotationBeanList.size() - 30) {
-                        isMore = false;
-                        onDownload(DateUtils.getNextDay(quotationBeanList.get(0)
+                    if (isEnableLoadMore
+                            && finishLoadmore&&mDatas.size() != 0
+                            && leftDeviant + valueStock > mDatas.size() - 30) {
+                        finishLoadmore = false;
+                        onDownload(DateUtils.getNextDay(mDatas.get(0)
                                 .getTime()));
                     }
                 } else {

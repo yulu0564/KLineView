@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="BaseStockView">
+        <attr name="colorCanvas" format="color" />
+        <attr name="colorRise" format="color" />
+        <attr name="colorFall" format="color"></attr>
+        <attr name="colorPing" format="color" />
+        <attr name="colorCoordinates" format="color" />
+        <attr name="colorFrame" format="color" />
+        <attr name="borderColor" format="color" />
+        <attr name="indexLineColor" format="color" />
+        <attr name="popupBorderColor" format="color" />
+        <attr name="textDefaultColor" format="color" />
+        <attr name="textIndicateColor" format="color" />
+        <attr name="colorTransWhite" format="color" />
+        <attr name="indicateRectColor" format="color" />
+        <attr name="colorCenterBg" format="color" />
+    </declare-styleable>
+
+    <declare-styleable name="BaseKlineView">
+        <attr name="colorAvlData5" format="color" />
+        <attr name="colorAvlData10" format="color" />
+        <attr name="colorAvlData30" format="color"></attr>
+    </declare-styleable>
+</resources>

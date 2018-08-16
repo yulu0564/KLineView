@@ -25,7 +25,7 @@ public class KLineStockView extends BaseKlineView {
 
     protected int leftDeviant = 0; // 左划了多少
 
-    protected List<QuotationBean> showQuotationBeanList = new ArrayList<QuotationBean>(); // 可见的K线数据
+    protected List<QuotationBean> showQuotationBeanList = new ArrayList<>(); // 可见的K线数据
 
     public KLineStockView(Context context) {
         this(context, null);
@@ -46,21 +46,21 @@ public class KLineStockView extends BaseKlineView {
             int num = 256 / (i + 1);
             kLWidthArray[i] = topRect.width() / num;
         }
-        valueStock = (int) (topRect.width() / kLWidthArray[kLWidthSub]);
+        initData();
     }
 
     @Override
     protected void initDarw() {
-        if (valueStock < quotationBeanList.size()) {
-            if (valueStock + leftDeviant > quotationBeanList.size()) {
-                leftDeviant = quotationBeanList.size() - valueStock;
+        if (valueStock < mDatas.size()) {
+            if (valueStock + leftDeviant > mDatas.size()) {
+                leftDeviant = mDatas.size() - valueStock;
             }
-            showQuotationBeanList = quotationBeanList.subList(quotationBeanList.size()
-                    - valueStock - leftDeviant, quotationBeanList.size()
+            showQuotationBeanList = mDatas.subList(mDatas.size()
+                    - valueStock - leftDeviant, mDatas.size()
                     - leftDeviant);
-            deviant = quotationBeanList.size() - valueStock - leftDeviant;
+            deviant = mDatas.size() - valueStock - leftDeviant;
         } else {
-            showQuotationBeanList = quotationBeanList;
+            showQuotationBeanList = mDatas;
             deviant = 0;
         }
         setKLMaxAndMin();
@@ -154,20 +154,21 @@ public class KLineStockView extends BaseKlineView {
                             10);
                 }
             } else if (i == 4) {
-                if (showQuotationBeanList != null
-                        && showQuotationBeanList.size() == valueStock) {
-                    String time = getStockDate(showQuotationBeanList.get(
-                            showQuotationBeanList.size() - 1).getTime());
-                    setText(time, cutoffX, topRect.bottom
-                                    + dip2px(10), mCanvas, Paint.Align.RIGHT, textDefaultColor,
-                            10);
+                if (showQuotationBeanList != null && showQuotationBeanList.size() > 0&&valueStock>0) {
+                    if (showQuotationBeanList.size() == valueStock) {
+                        String time = getStockDate(showQuotationBeanList.get(
+                                showQuotationBeanList.size() - 1).getTime());
+                        setText(time, cutoffX, topRect.bottom
+                                        + dip2px(10), mCanvas, Paint.Align.RIGHT, textDefaultColor,
+                                10);
+                    } else if (showQuotationBeanList.size() > valueStock * i / 4) {
+                        String time = getStockDate(showQuotationBeanList.get(
+                                valueStock * i / 4).getTime());
+                        setText(time, cutoffX, topRect.bottom + dip2px(10), mCanvas, Paint.Align.CENTER, textDefaultColor,
+                                10);
+                    }
                 }
-            } else if (showQuotationBeanList != null
-                    && showQuotationBeanList.size() > valueStock * i / 4) {
-                String time = getStockDate(showQuotationBeanList.get(
-                        valueStock * i / 4).getTime());
-                setText(time, cutoffX, topRect.bottom + dip2px(10), mCanvas, Paint.Align.CENTER, textDefaultColor,
-                        10);
+
             }
         }
     }
@@ -266,6 +267,7 @@ public class KLineStockView extends BaseKlineView {
     protected void initData() {
         leftDeviant = 0;
         valueStock = (int) (topRect.width() / kLWidthArray[kLWidthSub]);
+        initDarw();
         super.initData();
     }
 

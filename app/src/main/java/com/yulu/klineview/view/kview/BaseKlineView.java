@@ -1,12 +1,14 @@
 package com.yulu.klineview.view.kview;
 
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.RectF;
 import android.util.AttributeSet;
 
+import com.yulu.klineview.R;
 import com.yulu.klineview.algorithm.BollUtils;
 import com.yulu.klineview.algorithm.MAUtils;
 import com.yulu.klineview.base.BaseStockView;
@@ -17,9 +19,7 @@ import com.yulu.klineview.utils.DrawTextUtils;
 import com.yulu.klineview.utils.NumberUtils;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -27,9 +27,6 @@ import java.util.Map;
  */
 
 public abstract class BaseKlineView extends BaseStockView {
-
-    protected List<QuotationBean> quotationBeanList = new ArrayList<QuotationBean>(); // K线数据
-
     protected int colorAvlData5 = 0xFF05CFCE;// 0x00FFB400;五日平均线颜色值
     protected int colorAvlData10 = 0xFFFAAD4F;// 0x00F5A2FF;十日平均线颜色值
     protected int colorAvlData30 = 0xFFCC00CC;// 0x00105194;三十日平均线颜色值
@@ -61,14 +58,20 @@ public abstract class BaseKlineView extends BaseStockView {
 
     public BaseKlineView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
-        initBaseKline();
+        initBaseKline(attrs);
     }
 
     /**
      * 初始化画笔
      */
-    protected void initBaseKline() {
-
+    protected void initBaseKline(AttributeSet attrs) {
+        if(attrs!=null) {
+            TypedArray mTypedArray = mContext.obtainStyledAttributes(attrs,
+                    R.styleable.BaseKlineView);
+            colorAvlData5 = mTypedArray.getColor(R.styleable.BaseKlineView_colorAvlData5, colorAvlData5);
+            colorAvlData10 = mTypedArray.getColor(R.styleable.BaseKlineView_colorAvlData10, colorAvlData10);
+            colorAvlData30 = mTypedArray.getColor(R.styleable.BaseKlineView_colorAvlData30, colorAvlData30);
+        }
         marginNews = dip2px(5);
         centerHeightNews = dip2px(20);
         topHeightNews = dip2px(20);
@@ -80,6 +83,10 @@ public abstract class BaseKlineView extends BaseStockView {
 
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+        initSize(w,h);
+    }
+
+    private void initSize(int w, int h){
         this.canvasWidth = w;
         this.canvasHeight = h;
         float remainHeight = canvasHeight - centerHeightNews - topHeightNews - bottomHeightNews - marginNews * 2;
@@ -97,7 +104,7 @@ public abstract class BaseKlineView extends BaseStockView {
         initXLine();
         drawAllXLine(mCanvas);
         drawAllYLine(mCanvas);
-        if (quotationBeanList.size() > 0) {
+        if (mDatas.size() > 0) {
             initDrawKLine();
             drawKLine(mCanvas);
         }
@@ -203,9 +210,9 @@ public abstract class BaseKlineView extends BaseStockView {
      */
     protected void drawCenter(Canvas mCanvas, int indicateLineIndex) {
 
-        if (quotationBeanList.size() > indicateLineIndex) {
+        if (mDatas.size() > indicateLineIndex) {
 //            mCanvas.drawRect(bottomRect.left, bottomRect.top, bottomRect.left + dip2px(100), textY, mPaint);
-            double volume = quotationBeanList.get(indicateLineIndex)
+            double volume = mDatas.get(indicateLineIndex)
                     .getAmount();
             String volumeStr = "成交额:";
             if (volume > 100000000) {
@@ -287,7 +294,7 @@ public abstract class BaseKlineView extends BaseStockView {
             path.moveTo(topRect.left + offsetWidth, indicateLineY);
             path.lineTo(topRect.right + offsetWidth, indicateLineY);
             mCanvas.drawPath(path, indexLineHorizontalPaint);
-            QuotationBean mQuotationBean = quotationBeanList.get(indicateLineIndex);
+            QuotationBean mQuotationBean = mDatas.get(indicateLineIndex);
             String timeS = mQuotationBean.getTimeS(); //时间
             double close = mQuotationBean.getClose(); // 收盘价
             double priceChangeRatio = mQuotationBean.getChangeRatio();// 涨跌幅
@@ -334,8 +341,8 @@ public abstract class BaseKlineView extends BaseStockView {
             drawTop(mCanvas, indicateLineIndex);
             drawCenter(mCanvas, indicateLineIndex);
         } else {
-            drawTop(mCanvas, quotationBeanList.size() - 1);
-            drawCenter(mCanvas, quotationBeanList.size() - 1);
+            drawTop(mCanvas, mDatas.size() - 1);
+            drawCenter(mCanvas, mDatas.size() - 1);
         }
     }
 
@@ -415,51 +422,6 @@ public abstract class BaseKlineView extends BaseStockView {
     }
 
 
-    public List<QuotationBean> getData() {
-        return quotationBeanList;
-    }
-
-    public void cleanData() {
-        quotationBeanList.clear();
-        isMore = false;
-        initData();
-    }
-
-    public void setData(List<QuotationBean> quotationBeanList) {
-        this.quotationBeanList = quotationBeanList;
-        closeIndicateLine();
-
-        if (quotationBeanList.size() % 480 == 0) {
-            isMore = true;
-        } else {
-            isMore = false;
-        }
-        initData();
-        invalidate();
-    }
-
-    public void addData(List<QuotationBean> quotationBeanList) {
-        this.quotationBeanList.addAll(0, quotationBeanList);
-
-        if (quotationBeanList.size() % 480 == 0) {
-            isMore = true;
-        } else {
-            isMore = false;
-        }
-        initData();
-        invalidate();
-    }
-
-    public void updateData(List<QuotationBean> quotationBeanList) {
-        if (quotationBeanList.size() == 1) {
-            this.quotationBeanList.remove(this.quotationBeanList.get(this.quotationBeanList.size() - 1));
-            this.quotationBeanList.addAll(quotationBeanList);
-            initData();
-            invalidate();
-        }
-    }
-
-
     public BaseKlineView setColorAvlData5(int colorAvlData5) {
         this.colorAvlData5 = colorAvlData5;
         return this;
@@ -475,22 +437,6 @@ public abstract class BaseKlineView extends BaseStockView {
         return this;
     }
 
-    protected boolean isMore = true;
-
-    /**
-     * 设置左滑动的时候是否需要加载更多
-     */
-    public void IsMore(boolean isMore) {
-        this.isMore = isMore;
-    }
-
-    /**
-     * 刷新数据
-     */
-    public void onRefresh() {
-        initData();
-        invalidate();
-    }
 
     /**
      * 复权选择
@@ -540,10 +486,10 @@ public abstract class BaseKlineView extends BaseStockView {
             int day5 = TargetManager.getInstance().getMaDefault()[0];
             int day10 = TargetManager.getInstance().getMaDefault()[1];
             int day30 = TargetManager.getInstance().getMaDefault()[2];
-            averageMap = MAUtils.getInitAverageData(quotationBeanList, day5,
+            averageMap = MAUtils.getInitAverageData(mDatas, day5,
                     day10, day30);
         } else if (TARGET_HEADER_INDEX == 1) {
-            averageMap = BollUtils.getBollData(quotationBeanList, TargetManager
+            averageMap = BollUtils.getBollData(mDatas, TargetManager
                     .getInstance().getBollDefault()[0], TargetManager
                     .getInstance().getBollDefault()[1]);
         }
@@ -555,10 +501,10 @@ public abstract class BaseKlineView extends BaseStockView {
             int day5 = TargetManager.getInstance().getMaDefault()[0];
             int day10 = TargetManager.getInstance().getMaDefault()[1];
             int day30 = TargetManager.getInstance().getMaDefault()[2];
-            averageMap = MAUtils.getInitAverageData(quotationBeanList, day5,
+            averageMap = MAUtils.getInitAverageData(mDatas, day5,
                     day10, day30);
         } else if (TARGET_HEADER_INDEX == 1) {
-            averageMap = BollUtils.getBollData(quotationBeanList, TargetManager
+            averageMap = BollUtils.getBollData(mDatas, TargetManager
                     .getInstance().getBollDefault()[0], TargetManager
                     .getInstance().getBollDefault()[1]);
         }

@@ -1,37 +1,26 @@
 package com.yulu.klineview.base;
 
-import android.annotation.TargetApi;
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
+import android.content.res.TypedArray;
 import android.graphics.DashPathEffect;
-import android.graphics.Paint;
 import android.graphics.PathEffect;
-import android.graphics.Rect;
 import android.graphics.RectF;
-import android.graphics.drawable.Drawable;
-import android.os.Build;
-import android.util.ArrayMap;
+import android.support.annotation.ColorInt;
 import android.util.AttributeSet;
-import android.view.View;
 
+import com.yulu.klineview.R;
+import com.yulu.klineview.bean.QuotationBean;
+import com.yulu.klineview.imp.ChartObserver;
 import com.yulu.klineview.imp.OnClickSurfaceListener;
-import com.yulu.klineview.utils.DisplayUtils;
-import com.yulu.klineview.utils.DrawImageUtils;
-import com.yulu.klineview.utils.DrawTextUtils;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 /**
  * 绘图基类
  */
-public abstract class BaseStockView extends View {
-    protected Context mContext;
+public abstract class BaseStockView extends BaseChartView implements ChartObserver {
+
     protected boolean mIsDrawing;
-    protected float canvasHeight; // 画布高度
-    protected float canvasWidth; // 画布宽度
 
     protected int colorCanvas = 0xFFFFFFFF; // 画布背景
     protected int colorRise = 0xFFFF6356; // 涨的颜色
@@ -46,7 +35,7 @@ public abstract class BaseStockView extends View {
     protected int textDefaultColor = 0xFF4C4C4C;  //字的颜色
     protected int colorTransWhite = 0x99FFFFFF;
 
-    protected int indicateRectColor = 0xFFEEEEEE; //索引弹框北京色
+    protected int indicateRectColor = 0xFFEEEEEE; //索引弹框背景色
 
     protected int colorCenterBg = 0xFFF2F2F2; // 中间的背景
     protected boolean isShowIndicateLine = false;// 是否显示分时图的指示线
@@ -62,17 +51,18 @@ public abstract class BaseStockView extends View {
     protected PathEffect effects1, effects2;
     protected RectF topRect = new RectF(), bottomRect = new RectF();  //上下两个面板
 
-
-    private Map<Float, Float> dip2pxMaps;
-    private Map<Float, Float> sp2pxMaps;
+    public List<QuotationBean> getData() {
+        return mDatas;
+    }
 
     public BaseStockView(Context context, AttributeSet attrs) {
         this(context, null, 0);
+        initBaseStockView(attrs);
     }
 
     public BaseStockView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
-        initBaseStockView(context);
+        initBaseStockView(attrs);
     }
 
     public BaseStockView(Context context) {
@@ -100,62 +90,32 @@ public abstract class BaseStockView extends View {
         }
 
     }
-    private void initBaseStockView(Context context) {
-        this.mContext = context;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            dip2pxMaps = new ArrayMap<>();
-            sp2pxMaps = new ArrayMap<>();
-        } else {
-            dip2pxMaps = new HashMap<>();
-            sp2pxMaps = new HashMap<>();
+
+    private void initBaseStockView(AttributeSet attrs) {
+        if (attrs != null) {
+            TypedArray mTypedArray = mContext.obtainStyledAttributes(attrs,
+                    R.styleable.BaseStockView);
+            colorCanvas = mTypedArray.getColor(R.styleable.BaseStockView_colorCanvas, colorCanvas);
+            colorRise = mTypedArray.getColor(R.styleable.BaseStockView_colorRise, colorRise);
+            colorFall = mTypedArray.getColor(R.styleable.BaseStockView_colorFall, colorFall);
+            colorPing = mTypedArray.getColor(R.styleable.BaseStockView_colorPing, colorPing);
+            colorCoordinates = mTypedArray.getColor(R.styleable.BaseStockView_colorCoordinates, colorCoordinates);
+            colorFrame = mTypedArray.getColor(R.styleable.BaseStockView_colorFrame, colorFrame);
+            borderColor = mTypedArray.getColor(R.styleable.BaseStockView_borderColor, borderColor);
+            indexLineColor = mTypedArray.getColor(R.styleable.BaseStockView_indexLineColor, indexLineColor);
+            popupBorderColor = mTypedArray.getColor(R.styleable.BaseStockView_popupBorderColor, popupBorderColor);
+            textDefaultColor = mTypedArray.getColor(R.styleable.BaseStockView_textDefaultColor, textDefaultColor);
+            textIndicateColor = mTypedArray.getColor(R.styleable.BaseStockView_textIndicateColor, textIndicateColor);
+            colorTransWhite = mTypedArray.getColor(R.styleable.BaseStockView_colorTransWhite, colorTransWhite);
+            indicateRectColor = mTypedArray.getColor(R.styleable.BaseStockView_indicateRectColor, indicateRectColor);
+            colorCenterBg = mTypedArray.getColor(R.styleable.BaseStockView_colorCenterBg, colorCenterBg);
         }
+
         effects1 = new DashPathEffect(new float[]{
                 dip2px(2), dip2px(2), dip2px(2), dip2px(2)}, 1);
         effects2 = new DashPathEffect(new float[]{
                 dip2px(1.2f), dip2px(1.2f), dip2px(1.2f), dip2px(1.2f)}, 1);
     }
-
-    /**
-     * 写字
-     */
-
-    protected void setText(String text, float x, float y, Canvas canvas,
-                           Paint.Align align, int color, int textSize) {
-        DrawTextUtils.setText(text, x, y, canvas, align, color, sp2px(textSize));
-    }
-
-    /**
-     * 写字带返回坐标
-     *
-     * @param text 文字内容
-     */
-    protected float setTextR(String text, float x, float y, Canvas canvas,
-                             Paint.Align align, int color, int textSize) {
-        return DrawTextUtils.setTextR(text, x, y, canvas, align, color, sp2px(textSize));
-    }
-
-    /**
-     * 绘图画板上添加图片处理
-     *
-     * @param resId 图片地址
-     */
-    protected void drawImage(Canvas mCanvas, int top, int bottom, int left,
-                             int right, int resId, int color) {
-        Bitmap mBitmap = BitmapFactory.decodeResource(mContext.getResources(),
-                resId);
-        Rect fqRect = new Rect();
-        fqRect.top = top;
-        fqRect.bottom = bottom;
-        fqRect.right = right;
-        fqRect.left = left;
-        Paint mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        mPaint.setStyle(Paint.Style.FILL);
-        mBitmap = Bitmap.createScaledBitmap(mBitmap, fqRect.width(),
-                fqRect.height(), false);
-        mBitmap = DrawImageUtils.drawBg4Bitmap(color, mBitmap);
-        mCanvas.drawBitmap(mBitmap, fqRect.left, fqRect.top, mPaint);
-    }
-
 
     public boolean isScreen() {
         return isScreen;
@@ -166,81 +126,62 @@ public abstract class BaseStockView extends View {
     }
 
 
-    protected float sp2px(float spValue) {
-        Float px = sp2pxMaps.get(spValue);
-        if (px == null) {
-            px = DisplayUtils.dip2px(mContext, spValue);
-            sp2pxMaps.put(spValue, px);
-        }
-        return px;
-    }
-
-    public float dip2px(float dpValue) {
-        Float px = dip2pxMaps.get(dpValue);
-        if (px == null) {
-            px = DisplayUtils.dip2px(mContext, dpValue);
-            dip2pxMaps.put(dpValue, px);
-        }
-        return px;
-    }
-
-
-    public BaseStockView setColorCanvas(int colorCanvas) {
+    public BaseStockView setColorCanvas(@ColorInt int colorCanvas) {
         this.colorCanvas = colorCanvas;
         return this;
     }
 
-    public BaseStockView setColorRise(int colorRise) {
+    public BaseStockView setColorRise(@ColorInt int colorRise) {
         this.colorRise = colorRise;
         return this;
     }
 
-    public BaseStockView setColorFall(int colorFall) {
+    public BaseStockView setColorFall(@ColorInt int colorFall) {
         this.colorFall = colorFall;
         return this;
     }
 
-    public BaseStockView setColorPing(int colorPing) {
+    public BaseStockView setColorPing(@ColorInt int colorPing) {
         this.colorPing = colorPing;
         return this;
     }
 
-    public BaseStockView setColorCoordinates(int colorCoordinates) {
+    public BaseStockView setColorCoordinates(@ColorInt int colorCoordinates) {
         this.colorCoordinates = colorCoordinates;
         return this;
     }
 
-    public BaseStockView setColorFrame(int colorFrame) {
+    public BaseStockView setColorFrame(@ColorInt int colorFrame) {
         this.colorFrame = colorFrame;
         return this;
     }
 
-    public BaseStockView setBorderColor(int borderColor) {
+    public BaseStockView setBorderColor(@ColorInt int borderColor) {
         this.borderColor = borderColor;
         return this;
     }
 
-    public BaseStockView setIndexLineColor(int indexLineColor) {
+    public BaseStockView setIndexLineColor(@ColorInt int indexLineColor) {
         this.indexLineColor = indexLineColor;
         return this;
     }
 
-    public BaseStockView setPopupBorderColor(int popupBorderColor) {
+    public BaseStockView setPopupBorderColor(@ColorInt int popupBorderColor) {
         this.popupBorderColor = popupBorderColor;
         return this;
     }
 
-    public BaseStockView setTextDefaultColor(int textDefaultColor) {
+    public BaseStockView setTextDefaultColor(@ColorInt int textDefaultColor) {
         this.textDefaultColor = textDefaultColor;
         return this;
     }
 
-    public BaseStockView setColorTransWhite(int colorTransWhite) {
+    public BaseStockView setColorTransWhite(@ColorInt int colorTransWhite) {
         this.colorTransWhite = colorTransWhite;
         return this;
     }
 
-    public BaseStockView setColorCenterBg(int colorCenterBg) {
+    public BaseStockView setColorCenterBg(@ColorInt int colorCenterBg) {
         this.colorCenterBg = colorCenterBg;
         return this;
     }
@@ -249,7 +190,7 @@ public abstract class BaseStockView extends View {
         return textIndicateColor;
     }
 
-    public void setTextIndicateColor(int textIndicateColor) {
+    public void setTextIndicateColor(@ColorInt int textIndicateColor) {
         this.textIndicateColor = textIndicateColor;
     }
 
@@ -257,12 +198,27 @@ public abstract class BaseStockView extends View {
         return indicateRectColor;
     }
 
-    public void setIndicateRectColor(int indicateRectColor) {
+    public void setIndicateRectColor(@ColorInt int indicateRectColor) {
         this.indicateRectColor = indicateRectColor;
     }
 
 
+    /**
+     * 刷新数据
+     */
+    @Override
+    public void onRefresh() {
+        initData();
+        invalidate();
+    }
 
+    protected abstract void initData();
+
+
+    public void setAdapter(BaseKChartAdapter adapter) {
+        adapter.attach(this);
+        adapter.notifyDataSetChanged();
+    }
 
     protected OnClickSurfaceListener mOnClickSurfaceListener;
 
