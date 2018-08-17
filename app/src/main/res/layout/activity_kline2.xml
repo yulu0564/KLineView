@@ -1,15 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context="com.yulu.klineview.MainActivity">
 
     <com.yulu.klineview.view.kview.KLineGestureScollView
         android:id="@+id/KLineStockView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:textDefaultColor="@android:color/white"
-        app:colorCanvas="@android:color/black"/>
+        app:colorCanvas="@android:color/black"
+        app:kLWidthOld="8dp"
+        app:maxKLwidth="60dp"
+        app:minKLwidth="1dp"
+        app:targetFooterIndex="3"
+        app:textDefaultColor="@android:color/white" />
 </LinearLayout>

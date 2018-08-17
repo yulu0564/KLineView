@@ -20,6 +20,16 @@
     <declare-styleable name="BaseKlineView">
         <attr name="colorAvlData5" format="color" />
         <attr name="colorAvlData10" format="color" />
-        <attr name="colorAvlData30" format="color"></attr>
+        <attr name="colorAvlData30" format="color"/>
+        <attr name="kLWidthOld" format="dimension"/>
+        <attr name="maxKLwidth" format="dimension"/>
+        <attr name="minKLwidth" format="dimension"/>
+        <attr name="targetFooterIndex" format="integer"/>
+    </declare-styleable>
+
+    <declare-styleable name="BaseTimeLineView">
+        <attr name="rTPriceArcColor" format="color" />
+        <attr name="rTPriceLineColor" format="color" />
+        <attr name="rTAveragePriceLineColor" format="color"/>
     </declare-styleable>
 </resources>

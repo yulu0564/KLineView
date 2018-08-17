@@ -1,6 +1,7 @@
 package com.yulu.klineview.view.time;
 
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.LinearGradient;
 import android.graphics.Paint;
@@ -9,6 +10,7 @@ import android.graphics.RectF;
 import android.graphics.Shader;
 import android.util.AttributeSet;
 
+import com.yulu.klineview.R;
 import com.yulu.klineview.base.BaseStockView;
 import com.yulu.klineview.bean.QuotationBean;
 import com.yulu.klineview.bean.Tagging;
@@ -49,13 +51,20 @@ public abstract class BaseTimeLineView extends BaseStockView {
 
     public BaseTimeLineView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
-        initBaseTimeline();
+        initBaseTimeline(attrs);
     }
 
     /**
      * 初始化画笔
      */
-    protected void initBaseTimeline() {
+    protected void initBaseTimeline(AttributeSet attrs) {
+        if(attrs!=null) {
+            TypedArray mTypedArray = mContext.obtainStyledAttributes(attrs,
+                    R.styleable.BaseTimeLineView);
+            RTPriceArcColor = mTypedArray.getColor(R.styleable.BaseTimeLineView_rTPriceArcColor, RTPriceArcColor);
+            RTPriceLineColor = mTypedArray.getColor(R.styleable.BaseTimeLineView_rTPriceLineColor, RTPriceLineColor);
+            RTAveragePriceLineColor = mTypedArray.getColor(R.styleable.BaseTimeLineView_rTAveragePriceLineColor, RTAveragePriceLineColor);
+        }
         marginNews = dip2px(5);
         centerHeightNews = dip2px(20);
         topHeightNews = dip2px(15);

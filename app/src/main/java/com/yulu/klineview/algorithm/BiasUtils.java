@@ -2,6 +2,7 @@ package com.yulu.klineview.algorithm;
 
 
 import com.yulu.klineview.bean.QuotationBean;
+import com.yulu.klineview.model.TargetManager;
 import com.yulu.klineview.utils.DataUtils;
 
 import java.util.HashMap;
@@ -13,10 +14,17 @@ import java.util.Map;
  * Bias工具类
  */
 public class BiasUtils {
-    public final static int[] bias_default = {6, 12, 24};
     public final static String BIAS6 = "bias6";
     public final static String BIAS12 = "bias12";
     public final static String BIAS24 = "bias24";
+
+    public static Map<String, double[]> getBias(List<QuotationBean> quotationBeanLint) {
+        return getBias(quotationBeanLint, TargetManager.getInstance().getBiasDefault());
+    }
+
+    public static Map<String, double[]> getBias(List<QuotationBean> quotationBeanLint ,int[]biasDefault) {
+        return getBias(quotationBeanLint,biasDefault[0],biasDefault[1],biasDefault[2]);
+    }
 
     public static Map<String, double[]> getBias(List<QuotationBean> quotationBeanList, int day1, int day2, int day3) {
         if (quotationBeanList == null || quotationBeanList.size() == 0)

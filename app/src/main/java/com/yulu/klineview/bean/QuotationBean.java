@@ -114,7 +114,7 @@ public class QuotationBean {
 
     public double getChangeRatio() {
         if (changeRatio == 0) {
-            changeRatio = (close - LastClose) / LastClose;
+            return (close - LastClose) / LastClose;
         }
         return changeRatio;
     }

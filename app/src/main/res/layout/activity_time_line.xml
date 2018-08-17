@@ -3,10 +3,13 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context="com.yulu.klineview.MainActivity">
 
     <com.yulu.klineview.view.time.TimeGestureView
         android:id="@+id/KLineStockView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        app:rTPriceArcColor="#00047CC6"
+        app:rTPriceLineColor="#047CC6"/>
 </LinearLayout>

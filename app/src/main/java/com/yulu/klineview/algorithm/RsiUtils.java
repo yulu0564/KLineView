@@ -1,5 +1,7 @@
 package com.yulu.klineview.algorithm;
+
 import com.yulu.klineview.bean.QuotationBean;
+import com.yulu.klineview.model.TargetManager;
 
 import java.util.HashMap;
 import java.util.List;
@@ -12,7 +14,7 @@ public class RsiUtils {
     public final static int[] rsi_default = {6, 12, 24};
     public final static String RSI6 = "rsi6";
     public final static String RSI12 = "rsi12";
-    public final static String RSI24= "rsi24";
+    public final static String RSI24 = "rsi24";
 
 
     public static Map<String, double[]> getRSIData(List<QuotationBean> closePrices, int day6, int day12, int day24) {
@@ -22,6 +24,14 @@ public class RsiUtils {
         map.put(RSI24, getLongResult(day24, closePrices));
         return map;
 
+    }
+
+    public static Map<String, double[]> getRSIData(List<QuotationBean> closePrices, int[] rsiDefault) {
+        return getRSIData(closePrices,rsiDefault[0],rsiDefault[1],rsiDefault[2]);
+    }
+
+    public static Map<String, double[]> getRSIData(List<QuotationBean> closePrices) {
+        return getRSIData(closePrices, TargetManager.getInstance().getRsiDefault());
     }
 
     public static double[] getLongResult(int n, List<QuotationBean> closePrices) {

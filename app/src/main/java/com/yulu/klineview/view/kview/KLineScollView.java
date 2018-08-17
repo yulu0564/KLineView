@@ -6,8 +6,13 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.util.AttributeSet;
 
+import com.yulu.klineview.algorithm.BiasUtils;
+import com.yulu.klineview.algorithm.CciUtils;
+import com.yulu.klineview.algorithm.KdjUtils;
+import com.yulu.klineview.algorithm.RsiUtils;
 import com.yulu.klineview.bean.QuotationBean;
 import com.yulu.klineview.bean.Tagging;
+import com.yulu.klineview.model.TargetManager;
 import com.yulu.klineview.utils.NumberUtils;
 
 import java.util.ArrayList;
@@ -17,10 +22,7 @@ import java.util.List;
  * K线图(主线程绘制）
  */
 public class KLineScollView extends BaseKlineView {
-    protected float kLWidth;
-    protected float kLWidthOld; //默认宽度
-    protected float maxKLwidth;   //最大宽度
-    protected float minKLwidth;   //最小宽度
+
     protected int offsetWidthMax;
 
     protected int horizontalNum;//横坐标数量
@@ -120,7 +122,37 @@ public class KLineScollView extends BaseKlineView {
             }
             // 设置副图的坐标
             if (maxFT > minFT && i == 0) {
-                String title = NumberUtils.getTwoStepStr((maxFT - ordinateValue * i));
+                String title = null;
+                switch (TARGET_FOOTER_INDEX) {
+                    case 0:
+                        title = NumberUtils.getTwoStep((maxFT - ordinateValue * i));
+                        break;
+                    case 1:
+                    case 2:
+                        if (i == 0) {
+                            title = NumberUtils.getTwoStep(maxFT / 100.0f);
+                        } else if (i == 3) {
+                            title = NumberUtils.getTwoStep(minFT / 100.0f);
+                        }
+                        break;
+                    case 3:
+                        if (i == 0) {
+                            title = "100";
+                        } else if (i == 3) {
+                            title = "0";
+                        } else {
+                            title = "";
+                        }
+                        break;
+                    case 4:
+                    case 5:
+                        if (i == 0) {
+                            title = NumberUtils.getTwoStep(maxFT / 100.0);
+                        } else if (i == 3) {
+                            title = NumberUtils.getTwoStep(minFT / 100.0);
+                        }
+                        break;
+                }
                 setText(title, bottomRect.right + offsetWidth, cutoffY,
                         mCanvas, Paint.Align.RIGHT, textDefaultColor, 10);
             }
@@ -132,7 +164,7 @@ public class KLineScollView extends BaseKlineView {
      */
     @Override
     protected void drawAllYLine(Canvas mCanvas) {
-        for (Tagging mData : taggings) {
+        for (Tagging mData: taggings) {
             setText(mData.getText(), mData.getX(), mData.getY(), mCanvas, mData.getAlign(), textDefaultColor,
                     10);
         }
@@ -164,6 +196,29 @@ public class KLineScollView extends BaseKlineView {
         float lastY5 = -1, lastY10 = -1, lastY30 = -1;
         lastX = -1; // 绘图时X的历史值
         float startX = bottomRect.left + offset * kLWidth;
+
+        float diffY = -1;
+        float deaY = -1;
+
+        // KDJ
+        float kY = -1;
+        float dY = -1;
+        float jY = -1;
+
+        // rsi
+        float rsi6Y = -1;
+        float rsi12Y = -1;
+        float rsi24Y = -1;
+
+        // bias
+        float bias6Y = -1;
+        float bias12Y = -1;
+        float bias24Y = -1;
+
+        // cci
+        float cciY = -1;
+
+
         for (int i = offset; i < maxWidthNum; i++) {
             QuotationBean mQuotationBean = mDatas.get(i);
             double open = mQuotationBean.getOpen(); // 开盘价
@@ -226,7 +281,172 @@ public class KLineScollView extends BaseKlineView {
             } else {
                 mCanvas.drawRect(kLstartX, openY, endX, closeY, mDrawPaint);
             }
-            mCanvas.drawRect(kLstartX, getCutoffFTY(amount), endX, bottomRect.bottom, mDrawPaint);
+
+            switch (TARGET_FOOTER_INDEX) {
+                case 0:
+                    // VOL图
+                    mCanvas.drawRect(kLstartX, getCutoffFTY(amount), endX, bottomRect.bottom, mDrawPaint);
+                    break;
+                case 1:
+                    // 绘制MACD图
+                    float farPointsY = getCutoffFTY(0);
+                    if (macdMap != null) {
+                        if (macdMap.get("macd") != null && macdMap.get("macd")[i] != 0) {
+                            Paint mMacdPaint;
+                            if (close < open) {
+                                mMacdPaint = mFallPaint;
+                            } else if (close > open) {
+                                mMacdPaint = mRisePaint;
+                            } else {
+                                mMacdPaint = mPingPaint;
+                            }
+                            mCanvas.drawLine(startX + kLWidth / 2,
+                                    farPointsY, teamLastX, getCutoffFTY(macdMap.get("macd")[i]), mMacdPaint);
+                        }
+
+                        if (macdMap.get("diff") != null) {
+                            float tempDiffY = getCutoffFTY(macdMap.get("diff")[i]); // 最新数据
+                            if (i != 0) {
+                                mCanvas.drawLine(lastX, diffY, teamLastX,
+                                        tempDiffY, avgY30Paint);
+                            }
+                            diffY = tempDiffY;
+                        }
+                        if (macdMap.get("dea") != null) {
+                            float tempDeaY = getCutoffFTY(macdMap.get("dea")[i]); // 最新数据
+                            if (i != 0) {
+                                mCanvas.drawLine(lastX, deaY, teamLastX, tempDeaY,
+                                        avgY10Paint);
+                            }
+                            deaY = tempDeaY;
+                        }
+                    }
+                    break;
+                case 2:
+                    // 绘制KDJ图
+                    if (kdjMap != null) {
+                        if (kdjMap.get(KdjUtils.KDJ_K) != null) {
+                            float tempKY = getCutoffFTY(kdjMap.get(KdjUtils.KDJ_K)[i]);
+                            if (i != 0) {
+                                mCanvas.drawLine(lastX, kY, teamLastX, tempKY,
+                                        avgY5Paint);
+                            }
+                            kY = tempKY;
+                        }
+                        if (kdjMap.get(KdjUtils.KDJ_D) != null) {
+                            float tempDY = getCutoffFTY(kdjMap.get(KdjUtils.KDJ_D)[i]);
+                            if (i != 0) {
+                                mCanvas.drawLine(lastX, dY, teamLastX, tempDY,
+                                        avgY10Paint);
+                            }
+                            dY = tempDY;
+                        }
+                        if (kdjMap.get(KdjUtils.KDJ_J) != null) {
+                            float tempJY = getCutoffFTY(kdjMap.get(KdjUtils.KDJ_J)[i]);
+                            if (i != 0) {
+                                mCanvas.drawLine(lastX, jY, teamLastX, tempJY,
+                                        avgY30Paint);
+                            }
+                            jY = tempJY;
+                        }
+
+                    }
+                    break;
+                case 3:
+                    // 绘制RIS相对强弱指标
+                    if (rsiMap != null) {
+                        float tempRsi6 = getCutoffFTY(rsiMap.get(RsiUtils.RSI6)[i] / 100.0);
+                        float tempRsi12 = getCutoffFTY(rsiMap.get(RsiUtils.RSI12)[i] / 100.0);
+                        float tempRsi24 = getCutoffFTY(rsiMap.get(RsiUtils.RSI24)[i] / 100.0);
+                        if (i != 0) {
+                            if (rsiMap.get(RsiUtils.RSI6) != null && rsiMap.get(RsiUtils.RSI6)[i - 1] >= 0) {
+                                mCanvas.drawLine(lastX, rsi6Y, teamLastX, tempRsi6,
+                                        avgY5Paint);
+
+                            }
+                            if (rsiMap.get(RsiUtils.RSI12) != null && rsiMap.get(RsiUtils.RSI12)[i - 1] >= 0) {
+                                mCanvas.drawLine(lastX, rsi12Y, teamLastX,
+                                        tempRsi12, avgY10Paint);
+
+                            }
+                            if (rsiMap.get(RsiUtils.RSI24) != null && rsiMap.get(RsiUtils.RSI24)[i - 1] >= 0) {
+                                mCanvas.drawLine(lastX, rsi24Y, teamLastX,
+                                        tempRsi24, avgY30Paint);
+                            }
+                        }
+                        rsi6Y = tempRsi6;
+                        rsi12Y = tempRsi12;
+                        rsi24Y = tempRsi24;
+
+                    }
+                    break;
+                case 4:
+                    // BIAS线
+                    if (biasMap != null) {
+                        int bias1 = Integer.valueOf(TargetManager.getInstance().getBiasDefault()[0]);
+                        int bias2 = Integer.valueOf(TargetManager.getInstance().getBiasDefault()[1]);
+                        int bias3 = Integer.valueOf(TargetManager.getInstance().getBiasDefault()[2]);
+                        if (biasMap.get(BiasUtils.BIAS6) != null) {
+                            float tempBias6Y = getCutoffFTY(biasMap.get(BiasUtils.BIAS6)[i]);
+                            if (i >= bias1 && i != 0) {
+                                if (bias6Y > 0) {
+                                    mCanvas.drawLine(teamLastX, tempBias6Y, lastX,
+                                            bias6Y, avgY5Paint);
+                                } else {
+                                    mCanvas.drawLine(teamLastX, tempBias6Y + 2,
+                                            teamLastX, tempBias6Y + 3, avgY5Paint);
+                                }
+                            }
+                            bias6Y = tempBias6Y;
+                        }
+
+                        if (biasMap.get(BiasUtils.BIAS12) != null) {
+                            float tempBias12Y = getCutoffFTY(biasMap.get(BiasUtils.BIAS12)[i]);
+                            if (i >= bias2 && i != 0) {
+                                if (bias12Y > 0) {
+                                    mCanvas.drawLine(teamLastX, tempBias12Y, lastX,
+                                            bias12Y, avgY10Paint);
+                                } else {
+                                    mCanvas.drawLine(teamLastX, tempBias12Y + 2,
+                                            teamLastX, tempBias12Y + 3, avgY10Paint);
+                                }
+                            }
+                            bias12Y = tempBias12Y;
+                        }
+
+                        if (biasMap.get(BiasUtils.BIAS24) != null) {
+                            float tempBias24Y = getCutoffFTY(biasMap.get(BiasUtils.BIAS24)[i]);
+                            if (i >= bias3 && i != 0) {
+                                if (bias12Y > 0) {
+                                    mCanvas.drawLine(teamLastX, tempBias24Y, lastX,
+                                            bias24Y, avgY30Paint);
+                                } else {
+                                    mCanvas.drawLine(teamLastX, tempBias24Y + 2,
+                                            teamLastX, tempBias24Y + 3, avgY30Paint);
+                                }
+                            }
+                            bias24Y = tempBias24Y;
+                        }
+                    }
+                    break;
+                case 5:
+                    // CCI线
+                    if (cciMap.get(CciUtils.CCI) != null) {
+                        int cciValue = TargetManager.getInstance().getCciDefault();
+                        float tempCCIY = getCutoffFTY(cciMap.get(CciUtils.CCI)[i]);
+                        if (i != 0 && i >= cciValue) {
+                            if (cciY > 0) {
+                                mCanvas.drawLine(teamLastX, tempCCIY, lastX, cciY,
+                                        avgY5Paint);
+                            } else {
+                                mCanvas.drawLine(teamLastX, tempCCIY + 2,
+                                        teamLastX, tempCCIY + 3, avgY5Paint);
+                            }
+                        }
+                        cciY = tempCCIY;
+                    }
+                    break;
+            }
             if (isShowIndicateLine && scollX >= startX - offsetWidth
                     && scollX < startX + kLWidth - offsetWidth) {
                 scollX = teamLastX - offsetWidth;
@@ -252,8 +472,39 @@ public class KLineScollView extends BaseKlineView {
             maxWidthNum = mDatas.size();
         }
         setKLMaxAndMin();
+        switch (TARGET_FOOTER_INDEX) {
+            case 1:
+                if (macdMap != null) {
+                    setFTMaxAndMin(offset, maxWidthNum, macdMap.get("dea"), macdMap.get("diff"),
+                            macdMap.get("macd"));
+                }
+                break;
+            case 2:
+
+                if (kdjMap != null) {
+                    setFTMaxAndMin(offset, maxWidthNum, kdjMap.get("k"), kdjMap.get("d"),
+                            kdjMap.get("j"));
+                }
+                break;
+            case 3:
+                minFT = 0;
+                maxFT = 100;
+                break;
+            case 4:
+                if (biasMap != null) {
+                    setFTMaxAndMin(offset, maxWidthNum, biasMap.get("bias6"), biasMap.get("bias12"),
+                            biasMap.get("bias24"));
+                }
+                break;
+            case 5:
+                if (cciMap != null) {
+                    setFTMaxAndMin(offset, maxWidthNum, cciMap.get("cci"));
+                }
+                break;
+        }
         scrollTo(offsetWidth, 0);
     }
+
 
     /**
      * 设置K线坐标的最大和最小值
@@ -261,15 +512,19 @@ public class KLineScollView extends BaseKlineView {
     public void setKLMaxAndMin() {
         minKL = mDatas.get(offset).getLow();
         maxKL = mDatas.get(offset).getHigh();
-        minFT = 0;
-        maxFT = mDatas.get(offset).getAmount();
+        if (TARGET_FOOTER_INDEX == 0) {
+            minFT = 0;
+            maxFT = mDatas.get(offset).getAmount();
+        }
         for (int i = offset; i < maxWidthNum; i++) {
             QuotationBean mQuotationBean = mDatas.get(i);
             minKL = minKL < mQuotationBean.getLow() ? minKL : mQuotationBean.getLow();
             maxKL = maxKL > mQuotationBean.getHigh() ? maxKL : mQuotationBean
                     .getHigh();
-            maxFT = maxFT > mQuotationBean.getAmount() ? maxFT : mQuotationBean
-                    .getAmount();
+            if (TARGET_FOOTER_INDEX == 0) {
+                maxFT = maxFT > mQuotationBean.getAmount() ? maxFT : mQuotationBean
+                        .getAmount();
+            }
             if (initAverageData5 != null
                     && initAverageData5.length > i
                     && initAverageData5[i] > 0) {
@@ -301,11 +556,14 @@ public class KLineScollView extends BaseKlineView {
         }
     }
 
+    @Override
     public void setkLWidth(float kLWidth) {
+        super.setkLWidth(kLWidth);
         setkLWidth(kLWidth, false);
     }
 
     public void setkLWidth(final float kLWidth, boolean isRefresh) {
+        this.kLWidth = kLWidth;
         if (isRefresh) {
             offsetWidthMax = (int) Math.floor(mDatas.size() * kLWidth - topRect.width());
             horizontalNum = (int) Math.floor(topRect.width() / kLWidth);
@@ -318,13 +576,10 @@ public class KLineScollView extends BaseKlineView {
             } else {
                 offsetWidth = 0;
             }
-            this.kLWidth = kLWidth;
             setOffsetWidth(offsetWidth);
             updateTaggingCoordinate();
             invalidate();
         } else {
-            kLWidthOld = kLWidth;
-            this.kLWidth = kLWidth;
             post(new Runnable() {
                 @Override
                 public void run() {
@@ -382,19 +637,5 @@ public class KLineScollView extends BaseKlineView {
         }
     }
 
-    public float getMaxKLwidth() {
-        return maxKLwidth;
-    }
 
-    public void setMaxKLwidth(float maxKLwidth) {
-        this.maxKLwidth = maxKLwidth;
-    }
-
-    public float getMinKLwidth() {
-        return minKLwidth;
-    }
-
-    public void setMinKLwidth(float minKLwidth) {
-        this.minKLwidth = minKLwidth;
-    }
 }

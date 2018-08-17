@@ -19,7 +19,6 @@ public class TimeGestureView extends TimeStockView {
     }
 
     public TimeGestureView(Context context, AttributeSet attrs, int defStyle) {
-
         super(context, attrs, defStyle);
         mGestureDetector = new GestureDetector(mContext, new GestureListener());
     }

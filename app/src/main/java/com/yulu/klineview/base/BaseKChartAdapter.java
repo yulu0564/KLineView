@@ -38,7 +38,7 @@ public abstract class BaseKChartAdapter<T> {
                 for (int i = 0; i < data.size(); i++) {
                     mQuotations.add(getData(new QuotationBean(), data.get(i), i));
                 }
-                observer.mDatas.addAll(mQuotations);
+                observer.mDatas.addAll(0,mQuotations);
                 onRefresh();
             }
             datas.addAll(data);
@@ -53,7 +53,7 @@ public abstract class BaseKChartAdapter<T> {
             if (observer != null) {
                 List<QuotationBean> mQuotations = new ArrayList<>();
                 for (int i = 0; i < data.size(); i++) {
-                    mQuotations.add(getData(new QuotationBean(), data.get(i), i));
+                    mQuotations.add(0,getData(new QuotationBean(), data.get(i), i));
                 }
                 observer.mDatas.addAll(0, mQuotations);
                 onRefresh();
@@ -82,16 +82,16 @@ public abstract class BaseKChartAdapter<T> {
     }
 
     public void notifyDataSetChanged() {
+        List<QuotationBean> mQuotations = new ArrayList<>();
         for (int i = 0; i < datas.size(); i++) {
-            QuotationBean data;
             if (observer.mDatas.size() > i) {
-                data = observer.mDatas.get(i);
-                getData(data, getItem(i), i);
+                mQuotations.add(0,getData(observer.mDatas.get(i), getItem(i), i));
             } else {
-                data = new QuotationBean();
-                observer.mDatas.add(getData(data, getItem(i), i));
+                mQuotations.add(0,getData(new QuotationBean(), getItem(i), i));
             }
         }
+        observer.mDatas.clear();
+        observer.mDatas.addAll(mQuotations);
         onRefresh();
     }
 
@@ -103,7 +103,7 @@ public abstract class BaseKChartAdapter<T> {
                 getData(data, getItem(i), i);
             } else {
                 data = new QuotationBean();
-                observer.mDatas.add(getData(data, getItem(i), i));
+                observer.mDatas.add(0,getData(data, getItem(i), i));
             }
         }
         onRefresh();

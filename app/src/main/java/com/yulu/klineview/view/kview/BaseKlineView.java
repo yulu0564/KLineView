@@ -9,8 +9,13 @@ import android.graphics.RectF;
 import android.util.AttributeSet;
 
 import com.yulu.klineview.R;
+import com.yulu.klineview.algorithm.BiasUtils;
 import com.yulu.klineview.algorithm.BollUtils;
+import com.yulu.klineview.algorithm.CciUtils;
+import com.yulu.klineview.algorithm.KdjUtils;
 import com.yulu.klineview.algorithm.MAUtils;
+import com.yulu.klineview.algorithm.MacdUtils;
+import com.yulu.klineview.algorithm.RsiUtils;
 import com.yulu.klineview.base.BaseStockView;
 import com.yulu.klineview.bean.QuotationBean;
 import com.yulu.klineview.model.TargetManager;
@@ -27,6 +32,12 @@ import java.util.Map;
  */
 
 public abstract class BaseKlineView extends BaseStockView {
+
+    protected float kLWidth;
+    protected float kLWidthOld; //K线默认宽度
+    protected float maxKLwidth;   //最大宽度
+    protected float minKLwidth;   //最小宽度
+
     protected int colorAvlData5 = 0xFF05CFCE;// 0x00FFB400;五日平均线颜色值
     protected int colorAvlData10 = 0xFFFAAD4F;// 0x00F5A2FF;十日平均线颜色值
     protected int colorAvlData30 = 0xFFCC00CC;// 0x00105194;三十日平均线颜色值
@@ -34,7 +45,7 @@ public abstract class BaseKlineView extends BaseStockView {
     protected Map<String, double[]> averageMap = null;   //5、10、30日均线
 
     protected int TARGET_HEADER_INDEX = 0; // 主图技术指标索引 0代表MA（均线），1代表BOLL（布林通道）
-    protected int TARGET_FOOTER_INDEX = 0; // 副图技术指标索引 0：VOL（成交量） 1:MACD（移动平均线）
+    protected int TARGET_FOOTER_INDEX; // 副图技术指标索引 0：VOL（成交量） 1:MACD（移动平均线）
     // 2：KDJ（随机指标）3：RSI（相对强弱指标） 4：BIAS
     // 5：CCI（顺势指标）
 
@@ -47,6 +58,48 @@ public abstract class BaseKlineView extends BaseStockView {
     protected double minKL = 0; // 坐标最小值
     protected double maxFT = 0; // 坐标最大值
     protected double minFT = 0; // 坐标最小值
+
+    /**
+     * Macd数据
+     */
+    protected Map<String, double[]> macdMap = null;
+    /**
+     * rsi数据
+     */
+    protected Map<String, double[]> rsiMap = null;
+    /**
+     * kdj数据
+     */
+    protected Map<String, double[]> kdjMap = null;
+
+    /**
+     * bias数据
+     */
+    protected Map<String, double[]> biasMap = null;
+    /**
+     * cci数据
+     */
+    protected Map<String, double[]> cciMap = null;
+
+
+    protected boolean isEnableLoadMore = true;
+    protected boolean finishLoadmore = true;
+
+    /**
+     * 加载更多完成
+     */
+    public void finishLoadmore() {
+        finishLoadmore = true;
+    }
+
+    /**
+     * 设置左滑动的时候是否需要加载更多
+     */
+    public void setEnableLoadmore(boolean enableLoadmore) {
+        isEnableLoadMore = enableLoadmore;
+    }
+
+
 
     public BaseKlineView(Context context) {
         this(context, null);
@@ -65,28 +118,34 @@ public abstract class BaseKlineView extends BaseStockView {
      * 初始化画笔
      */
     protected void initBaseKline(AttributeSet attrs) {
-        if(attrs!=null) {
-            TypedArray mTypedArray = mContext.obtainStyledAttributes(attrs,
-                    R.styleable.BaseKlineView);
-            colorAvlData5 = mTypedArray.getColor(R.styleable.BaseKlineView_colorAvlData5, colorAvlData5);
-            colorAvlData10 = mTypedArray.getColor(R.styleable.BaseKlineView_colorAvlData10, colorAvlData10);
-            colorAvlData30 = mTypedArray.getColor(R.styleable.BaseKlineView_colorAvlData30, colorAvlData30);
-        }
+
         marginNews = dip2px(5);
         centerHeightNews = dip2px(20);
         topHeightNews = dip2px(20);
         bottomHeightNews = dip2px(0);
         borderlineWidth = dip2px(0.5f);
+        if (attrs != null) {
+            TypedArray mTypedArray = mContext.obtainStyledAttributes(attrs,
+                    R.styleable.BaseKlineView);
+            colorAvlData5 = mTypedArray.getColor(R.styleable.BaseKlineView_colorAvlData5, colorAvlData5);
+            colorAvlData10 = mTypedArray.getColor(R.styleable.BaseKlineView_colorAvlData10, colorAvlData10);
+            colorAvlData30 = mTypedArray.getColor(R.styleable.BaseKlineView_colorAvlData30, colorAvlData30);
+            setkLWidth(mTypedArray.getDimensionPixelSize(R.styleable.BaseKlineView_kLWidthOld, (int) dip2px(10)));
+            setMaxKLwidth(mTypedArray.getDimensionPixelSize(R.styleable.BaseKlineView_maxKLwidth, (int) dip2px(50)));
+            setMinKLwidth(mTypedArray.getDimensionPixelSize(R.styleable.BaseKlineView_minKLwidth, (int) dip2px(2)));
+            TARGET_FOOTER_INDEX = mTypedArray.getInt(R.styleable.BaseKlineView_targetFooterIndex,0);
+        }
+
         initXLine();
         initDrawKLine();
     }
 
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-        initSize(w,h);
+        initSize(w, h);
     }
 
-    private void initSize(int w, int h){
+    private void initSize(int w, int h) {
         this.canvasWidth = w;
         this.canvasHeight = h;
         float remainHeight = canvasHeight - centerHeightNews - topHeightNews - bottomHeightNews - marginNews * 2;
@@ -126,11 +185,6 @@ public abstract class BaseKlineView extends BaseStockView {
      * 绘制K线图纵坐标
      */
     protected abstract void drawAllYLine(Canvas mCanvas);// 绘制K线图纵坐标
-
-    /**
-     * 绘制边框
-     */
-
 
     /**
      * 边框
@@ -181,9 +235,7 @@ public abstract class BaseKlineView extends BaseStockView {
         float x = setTextR(titleM5, topRect.left + offsetWidth, topRect.top - dip2px(5), mCanvas, Paint.Align.LEFT, colorAvlData5, 10);
         if (initAverageData10 != null
                 && initAverageData10.length > indicateLineIndex
-                && initAverageData10[indicateLineIndex] > 0)
-
-        {
+                && initAverageData10[indicateLineIndex] > 0) {
             titleM10 = titleM10
                     + NumberUtils.getTwoStep(initAverageData10[indicateLineIndex]);
         } else {
@@ -211,20 +263,180 @@ public abstract class BaseKlineView extends BaseStockView {
     protected void drawCenter(Canvas mCanvas, int indicateLineIndex) {
 
         if (mDatas.size() > indicateLineIndex) {
-//            mCanvas.drawRect(bottomRect.left, bottomRect.top, bottomRect.left + dip2px(100), textY, mPaint);
-            double volume = mDatas.get(indicateLineIndex)
-                    .getAmount();
-            String volumeStr = "成交额:";
-            if (volume > 100000000) {
-                volumeStr = volumeStr + NumberUtils.getTwoStep(volume / 100000000)
-                        + "亿";
-            } else if (volume > 10000) {
-                volumeStr = volumeStr + NumberUtils.getTwoStep(volume / 10000) + "万";
-            } else {
-                volumeStr = volumeStr + NumberUtils.getTwoStep(volume);
+            switch (TARGET_FOOTER_INDEX) {
+                case 0:
+                    double volume = mDatas.get(indicateLineIndex)
+                            .getAmount();
+                    String volumeStr = "成交额:" + NumberUtils.getTwoStepStr(volume);
+                    setText(volumeStr, bottomRect.left + dip2px(10) + offsetWidth, bottomRect.top + dip2px(12),
+                            mCanvas, Paint.Align.LEFT, textDefaultColor, 10);
+                    break;
+                case 1:
+                    if (macdMap != null) {
+                        double[] dea = macdMap.get(MacdUtils.MACD_DEA);
+                        double[] diff = macdMap.get(MacdUtils.MACD_DIFF);
+                        float x = bottomRect.left + offsetWidth;
+                        if (diff != null && diff.length >= indicateLineIndex) {
+                            x = setTextR("DIF:"
+                                            + NumberUtils.getTwoStep(diff[indicateLineIndex]),
+                                    x + dip2px(10),
+                                    bottomRect.top + dip2px(12),
+                                    mCanvas,
+                                    Paint.Align.LEFT,
+                                    colorAvlData30,
+                                    10);
+                        }
+                        if (dea != null && dea.length >= indicateLineIndex) {
+                            setText("DEA:"
+                                            + NumberUtils.getTwoStep(dea[indicateLineIndex]),
+                                    x + dip2px(10),
+                                    bottomRect.top + dip2px(12),
+                                    mCanvas,
+                                    Paint.Align.LEFT,
+                                    colorAvlData10,
+                                    10);
+                        }
+                    }
+                    break;
+                case 2:
+                    if (kdjMap != null) {
+                        double[] k = kdjMap.get(KdjUtils.KDJ_K);
+                        double[] d = kdjMap.get(KdjUtils.KDJ_D);
+                        double[] j = kdjMap.get(KdjUtils.KDJ_J);
+                        float x = bottomRect.left + offsetWidth;
+                        if (k != null && k.length >= indicateLineIndex) {
+                            x = setTextR("K:" + NumberUtils.getTwoStep(k[indicateLineIndex] / 100.0f),
+                                    x + dip2px(10),
+                                    bottomRect.top + dip2px(12),
+                                    mCanvas,
+                                    Paint.Align.LEFT,
+                                    colorAvlData5,
+                                    10);
+                        }
+                        if (d != null && d.length >= indicateLineIndex) {
+                            x = setTextR("D:"
+                                            + NumberUtils.getTwoStep(d[indicateLineIndex] / 100.0f),
+                                    x + dip2px(10),
+                                    bottomRect.top + dip2px(12),
+                                    mCanvas,
+                                    Paint.Align.LEFT,
+                                    colorAvlData10,
+                                    10);
+                        }
+                        if (j != null && j.length >= indicateLineIndex) {
+                            x = setTextR("J:"
+                                            + NumberUtils.getTwoStep(j[indicateLineIndex] / 100.0f),
+                                    x + dip2px(10),
+                                    bottomRect.top + dip2px(12),
+                                    mCanvas,
+                                    Paint.Align.LEFT,
+                                    colorAvlData30,
+                                    10);
+                        }
+                    }
+                    break;
+                case 3:
+                    if (rsiMap != null) {
+                        double[] rsi6 = rsiMap.get(RsiUtils.RSI6);
+                        double[] rsi12 = rsiMap.get(RsiUtils.RSI12);
+                        double[] rsi24 = rsiMap.get(RsiUtils.RSI24);
+                        float x = bottomRect.left + offsetWidth;
+                        if (rsi6 != null && rsi6.length >= indicateLineIndex) {
+                            x = setTextR(TargetManager.getInstance().getRsiDefault()[0]
+                                            + ":"
+                                            + NumberUtils.getTwoStep(rsi6[indicateLineIndex] / 100.0f),
+                                    x + dip2px(10),
+                                    bottomRect.top + dip2px(12),
+                                    mCanvas,
+                                    Paint.Align.LEFT,
+                                    colorAvlData5,
+                                    10);
+                        }
+                        if (rsi12 != null && rsi12.length >= indicateLineIndex) {
+                            x = setTextR(TargetManager.getInstance().getRsiDefault()[1]
+                                            + ":"
+                                            + NumberUtils.getTwoStep(rsi12[indicateLineIndex] / 100.0f),
+                                    x + dip2px(10),
+                                    bottomRect.top + dip2px(12),
+                                    mCanvas,
+                                    Paint.Align.LEFT,
+                                    colorAvlData10,
+                                    10);
+                        }
+                        if (rsi24 != null && rsi24.length >= indicateLineIndex) {
+                            setTextR(TargetManager.getInstance().getRsiDefault()[2]
+                                            + ":"
+                                            + NumberUtils.getTwoStep(rsi24[indicateLineIndex] / 100.0f),
+                                    x + dip2px(10),
+                                    bottomRect.top + dip2px(12),
+                                    mCanvas,
+                                    Paint.Align.LEFT,
+                                    colorAvlData30,
+                                    10);
+                        }
+                    }
+                    break;
+                case 4:
+                    if (biasMap != null) {
+                        double[] bias6 = biasMap.get(BiasUtils.BIAS6);
+                        double[] bias12 = biasMap.get(BiasUtils.BIAS12);
+                        double[] bias24 = biasMap.get(BiasUtils.BIAS24);
+                        float x = bottomRect.left + offsetWidth;
+                        if (bias6 != null && bias6.length >= indicateLineIndex) {
+                            x = setTextR("b"
+                                            + TargetManager.getInstance().getBiasDefault()[0]
+                                            + ":"
+                                            + NumberUtils.getTwoStep(bias6[indicateLineIndex] / 100.0f),
+                                    x + dip2px(10),
+                                    bottomRect.top + dip2px(12),
+                                    mCanvas,
+                                    Paint.Align.LEFT,
+                                    colorAvlData5,
+                                    10);
+                        }
+                        if (bias12 != null && bias12.length >= indicateLineIndex) {
+                            x = setTextR("b"
+                                            + TargetManager.getInstance().getBiasDefault()[1]
+                                            + ":"
+                                            + NumberUtils.getTwoStep(bias12[indicateLineIndex] / 100.0f),
+                                    x + dip2px(10),
+                                    bottomRect.top + dip2px(12),
+                                    mCanvas,
+                                    Paint.Align.LEFT,
+                                    colorAvlData10,
+                                    10);
+
+                        }
+                        if (bias24 != null && bias24.length >= indicateLineIndex) {
+                            setTextR("b"
+                                            + TargetManager.getInstance().getBiasDefault()[2]
+                                            + ":"
+                                            + NumberUtils.getTwoStep(bias24[indicateLineIndex] / 100.0f),
+                                    x + dip2px(10),
+                                    bottomRect.top + dip2px(12),
+                                    mCanvas,
+                                    Paint.Align.LEFT,
+                                    colorAvlData30,
+                                            10);
+                        }
+                    }
+                    break;
+                case 5:
+                    if (cciMap != null) {
+                        double[] cci = cciMap.get(CciUtils.CCI);
+                        float x = bottomRect.left + offsetWidth;
+                        if (cci != null && cci.length > 0) {
+                            setText("CCI:" + NumberUtils.getTwoStep(cci[cci.length - 1] / 100.0),
+                                    x + dip2px(10),
+                                    bottomRect.top + dip2px(12),
+                                    mCanvas,
+                                    Paint.Align.LEFT,
+                                    colorAvlData5,
+                                    10);
+                        }
+                    }
+                    break;
             }
-            setText(volumeStr, bottomRect.left + dip2px(10) + offsetWidth, bottomRect.top + dip2px(12),
-                    mCanvas, Paint.Align.LEFT, textDefaultColor, 10);
         }
     }
 
@@ -314,14 +526,14 @@ public abstract class BaseKlineView extends BaseStockView {
             float widthLeft = DrawTextUtils.getTextWidth(closeStr, sp2px(10)) + dip2px(10);
 
             float startX = offsetWidth + bottomRect.left;
-            if (scollXNews > bottomRect.right + offsetWidth - widthbottom/2) {
-                scollXNews = bottomRect.right + offsetWidth - widthbottom/2;
-            }else if(scollXNews<bottomRect.left+widthbottom/2){
-                scollXNews = bottomRect.left+widthbottom/2;
+            if (scollXNews > bottomRect.right + offsetWidth - widthbottom / 2) {
+                scollXNews = bottomRect.right + offsetWidth - widthbottom / 2;
+            } else if (scollXNews < bottomRect.left + widthbottom / 2) {
+                scollXNews = bottomRect.left + widthbottom / 2;
             }
             float dip_8 = dip2px(8);
-            if(indicateLineY-topRect.top<dip2px(8)){
-                indicateLineY = dip_8+topRect.top;
+            if (indicateLineY - topRect.top < dip2px(8)) {
+                indicateLineY = dip_8 + topRect.top;
             }
             mCanvas.drawRect(startX, indicateLineY - dip_8, startX + widthLeft, indicateLineY + dip_8, indicateRectPaint);
             mCanvas.drawRect(scollXNews - widthbottom / 2, bottomRect.bottom - dip2px(15), scollXNews + widthbottom / 2, bottomRect.bottom, indicateRectPaint);
@@ -352,7 +564,7 @@ public abstract class BaseKlineView extends BaseStockView {
         if (mXLinePaint == null) {
             mXLinePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
             mXLinePaint.setColor(colorCoordinates);
-            mXLinePaint.setStrokeWidth(dip2px(0.2f));
+            mXLinePaint.setStrokeWidth(dip2px(0.1f));
             mXLinePaint.setPathEffect(effects1);
             mXLinePaint.setStyle(Paint.Style.STROKE);
         }
@@ -497,6 +709,23 @@ public abstract class BaseKlineView extends BaseStockView {
 
 
     protected void initData() {
+        switch (TARGET_FOOTER_INDEX) {
+            case 1:
+                macdMap = MacdUtils.getInitMacdData(mDatas);
+                break;
+            case 2:
+                kdjMap = KdjUtils.getKDJ(mDatas);
+                break;
+            case 3:
+                rsiMap = RsiUtils.getRSIData(mDatas);
+                break;
+            case 4:
+                biasMap = BiasUtils.getBias(mDatas);
+                break;
+            case 5:
+                cciMap = CciUtils.getCCI(mDatas);
+                break;
+        }
         if (TARGET_HEADER_INDEX == 0) {
             int day5 = TargetManager.getInstance().getMaDefault()[0];
             int day10 = TargetManager.getInstance().getMaDefault()[1];
@@ -558,6 +787,33 @@ public abstract class BaseKlineView extends BaseStockView {
     }
 
     /**
+     * 设置副图坐标的最大和最小值
+     */
+    public void setFTMaxAndMin(int start,int stop,double[]... array) {
+        minFT = 0;
+        maxFT = 0;
+        if (array == null) {
+            return;
+        }
+        if (array[0] != null && array[0].length > 0) {
+            maxFT = array[0][start];
+            minFT = array[0][start];
+        }
+        for (int i = 0; i < array.length; i++) {
+            double[] s = array[i];
+            if (s == null) {
+                continue;
+            }
+            for (int ii = start; ii < stop; ii++) {
+                minFT = minFT < s[ii] ? minFT
+                        : s[ii];
+                maxFT = maxFT > s[ii] ? maxFT
+                        : s[ii];
+            }
+        }
+    }
+
+    /**
      * 重置画布
      */
     public void resetCanvas() {
@@ -573,5 +829,26 @@ public abstract class BaseKlineView extends BaseStockView {
         indexLineVerticalPaint = null;//索引线竖
         indexLineHorizontalPaint = null;//索引线横
         indicateRectBorderPaint = null;//弹框的边框
+    }
+
+    public float getMaxKLwidth() {
+        return maxKLwidth;
+    }
+
+    public void setMaxKLwidth(float maxKLwidth) {
+        this.maxKLwidth = maxKLwidth;
+    }
+
+    public float getMinKLwidth() {
+        return minKLwidth;
+    }
+
+    public void setMinKLwidth(float minKLwidth) {
+        this.minKLwidth = minKLwidth;
+    }
+
+
+    public void setkLWidth(float kLWidth) {
+        kLWidthOld = kLWidth;
     }
 }

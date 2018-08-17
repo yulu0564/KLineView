@@ -1,6 +1,7 @@
 package com.yulu.klineview.algorithm;
 
 import com.yulu.klineview.bean.QuotationBean;
+import com.yulu.klineview.model.TargetManager;
 
 import java.util.HashMap;
 import java.util.List;
@@ -11,7 +12,6 @@ import java.util.Map;
  */
 public class KdjUtils {
 
-    public final static int[] kdj_default = {9, 3, 3};
     public final static String KDJ_K = "k";
     public final static String KDJ_D = "d";
     public final static String KDJ_J = "j";
@@ -80,21 +80,21 @@ public class KdjUtils {
             if (tempValue == 0)
                 tempValue = 1;
             double tempRsv = (closeDatas[ii] - minDatas[ii]) * 100 * 100 * 10 / tempValue;
-            rsv[ii] = tempRsv / 10 + tempRsv;
+            rsv[ii] = tempRsv / 10 + getOver(tempRsv);
             if (ii > 0) {
                 double beginNum = (kValue - 1) * k[ii - 1] * 10 / kValue;
-                double endNum = (int) (rsv[ii] * 10 / kValue);
-                k[ii] = (beginNum / 10 + beginNum)
-                        + (endNum / 10 + endNum);
+                double endNum = (rsv[ii] * 10 / kValue);
+                k[ii] = (beginNum / 10 + getOver(beginNum))
+                        + (endNum / 10 + getOver(endNum));
                 beginNum = (dValue - 1) * d[ii - 1] * 10 / dValue;
                 endNum = k[ii] * 10 / dValue;
-                d[ii] = (beginNum / 10 + beginNum)
-                        + (endNum / 10 + endNum);
+                d[ii] = (beginNum / 10 + getOver(beginNum))
+                        + (endNum / 10 + getOver(endNum));
                 j[ii] = 3 * k[ii] - 2 * d[ii];
             } else {
-                k[ii] = (int) rsv[ii];
-                d[ii] = (int) rsv[ii];
-                j[ii] = (int) rsv[ii];
+                k[ii] = rsv[ii];
+                d[ii] = rsv[ii];
+                j[ii] = rsv[ii];
             }
         }
         Map<String, double[]> map = new HashMap<>();
@@ -104,4 +104,24 @@ public class KdjUtils {
         return map;
     }
 
+    public static Map<String, double[]> getKDJ(List<QuotationBean> quotationBeanList, int[] kdjDefault) {
+        return getKDJ(quotationBeanList,kdjDefault[0],kdjDefault[1],kdjDefault[2]);
+    }
+
+    public static Map<String, double[]> getKDJ(List<QuotationBean> quotationBeanList) {
+        return getKDJ(quotationBeanList, TargetManager.getInstance().getKdjDefault());
+    }
+
+    // 四舍五入
+    public static int getOver(double number) {
+        // 进位
+        int over = 0;
+        // 最后一位
+        double lastNumber = number % 10;
+
+        if (lastNumber >= 5) {
+            over = 1;
+        }
+        return over;
+    }
 }

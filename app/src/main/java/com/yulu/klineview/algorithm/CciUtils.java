@@ -2,6 +2,7 @@ package com.yulu.klineview.algorithm;
 
 
 import com.yulu.klineview.bean.QuotationBean;
+import com.yulu.klineview.model.TargetManager;
 import com.yulu.klineview.utils.DataUtils;
 
 import java.util.HashMap;
@@ -32,6 +33,10 @@ public class CciUtils {
         Map<String, double[]> map = new HashMap<>();
         map.put(CCI, getCCIValue(tp, avg14, avgMD, days));
         return map;
+    }
+
+    public static Map<String, double[]> getCCI(List<QuotationBean> quotationBeanList) {
+        return getCCI(quotationBeanList, TargetManager.getInstance().getCciDefault());
     }
 
 

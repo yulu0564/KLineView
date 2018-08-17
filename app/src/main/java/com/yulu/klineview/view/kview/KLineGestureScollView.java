@@ -56,10 +56,6 @@ public class KLineGestureScollView extends KLineScollView {
                 nLenStart = nLenEnd;
                 return true;
             }
-//            if (nLenEnd > nLenStart)// 通过两个手指开始距离和结束距离，来判断放大缩小
-//            {
-            // 放大
-//            if (kLWidth < maxKLwidth && kLWidth > minKLwidth) {
             float kLWidthNews = (float) (kLWidth * nLenEnd / nLenStart);
             if (kLWidthNews > maxKLwidth) {
                 kLWidthNews = maxKLwidth;
@@ -68,13 +64,9 @@ public class KLineGestureScollView extends KLineScollView {
                 kLWidthNews = minKLwidth;
             }
             setkLWidth(kLWidthNews, true);
-//        }
             nLenStart = nLenEnd;
-//
-//            }
-        } else
 
-        {
+        } else {
             nLenStart = 0;
             mGestureDetector.onTouchEvent(event);
         }

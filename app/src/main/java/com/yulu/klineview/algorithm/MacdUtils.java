@@ -1,6 +1,7 @@
 package com.yulu.klineview.algorithm;
 
 import com.yulu.klineview.bean.QuotationBean;
+import com.yulu.klineview.model.TargetManager;
 
 import java.util.HashMap;
 import java.util.List;
@@ -76,5 +77,12 @@ public class MacdUtils {
         map.put(MACD_DEA, t1);
         map.put(MACD, t2);
         return map;
+    }
+
+    public static Map<String, double[]> getInitMacdData(List<QuotationBean> datas, float[] macd_default) {
+        return getInitMacdData(datas, macd_default[0], macd_default[1], macd_default[2]);
+    }
+    public static Map<String, double[]> getInitMacdData(List<QuotationBean> datas) {
+        return getInitMacdData(datas, TargetManager.getInstance().getMacdDefault());
     }
 }

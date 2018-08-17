@@ -15,25 +15,7 @@ public class KLineGestureView extends KLineStockView {
     protected GestureDetector mGestureDetector;
 
 
-    private double nLenStart0, nLenStart1 = 0; // 手势缩放的时候使用
-
-
-    protected boolean isEnableLoadMore = true;
-    protected boolean finishLoadmore = true;
-
-    /**
-     * 加载更多完成
-     */
-    public void finishLoadmore() {
-        finishLoadmore = true;
-    }
-
-    /**
-     * 设置左滑动的时候是否需要加载更多
-     */
-    public void setEnableLoadmore(boolean enableLoadmore) {
-        isEnableLoadMore = enableLoadmore;
-    }
+    private double nLenStart; // 手势缩放的时候使用
 
 
     public KLineGestureView(Context context) {
@@ -76,54 +58,25 @@ public class KLineGestureView extends KLineStockView {
                     - (int) event.getY(1));
             double nLenEnd = Math.sqrt((double) xlen * xlen
                     + (double) ylen * ylen);
-            if (nLenStart0 == 0 || nLenStart1 == 0) {
-                nLenStart0 = nLenEnd;
-                nLenStart1 = nLenEnd;
+            if (nLenStart == 0) {
+                nLenStart = nLenEnd;
                 return true;
             }
-            if (nLenEnd > nLenStart0 + dip2px(15))// 通过两个手指开始距离和结束距离，来判断放大缩小
-            {
-                // 放大
-                if (kLWidthSub < kLWidthArray.length - 1) {
-                    kLWidthSub++;
-                    valueStock = (int) (topRect.width() / kLWidthArray[kLWidthSub]); // 修改显示数量
-                    int centerDeviant = (showQuotationBeanList.size() + valueStock)
-                            / 2 + 1 + deviant;
-                    if (centerDeviant < mDatas.size()) {
-                        leftDeviant = mDatas.size()
-                                - centerDeviant;
-                    } else {
-                        leftDeviant = 0;
-                    }
-                    invalidate();
-                }
-                nLenStart0 = nLenEnd + dip2px(40);
-                nLenStart1 = nLenEnd;
-            } else if (nLenEnd < nLenStart1 - dip2px(15)) {
-                // 缩放
-                if (kLWidthSub > 0) {
-                    kLWidthSub--;
-                    valueStock = (int) (topRect.width() / kLWidthArray[kLWidthSub]); // 修改显示数量
-                    int centerDeviant = (showQuotationBeanList.size() + valueStock)
-                            / 2 + 1 + deviant; // 偏移后最后一个坐标点的坐标
-
-
-                    if (centerDeviant < mDatas.size()) {
-                        leftDeviant = mDatas.size()
-                                - centerDeviant;
-                    } else {
-                        leftDeviant = 0;
-                    }
-                    invalidate();
-                }
-                nLenStart0 = nLenEnd;
-                nLenStart1 = nLenEnd - dip2px(40);
+            float kLWidthNews = (float) (kLWidth * nLenEnd / nLenStart);
+            if (kLWidthNews > maxKLwidth) {
+                kLWidthNews = maxKLwidth;
             }
+            if (kLWidthNews < minKLwidth) {
+                kLWidthNews = minKLwidth;
+            }
+            setkLWidth(kLWidthNews, true);
+            nLenStart = nLenEnd;
+
         } else {
-            nLenStart0 = 0;
-            nLenStart1 = 0;
+            nLenStart = 0;
             mGestureDetector.onTouchEvent(event);
         }
+
         return true;
     }
 
@@ -165,7 +118,7 @@ public class KLineGestureView extends KLineStockView {
         if (isShowIndicateLine) {
             float x = e.getX();
             if (x >= topRect.left
-                    && x <= lastX + kLWidthArray[kLWidthSub] / 2) {
+                    && x <= lastX + kLWidth / 2) {
                 scollX = x;
                 invalidate();
             }
@@ -181,16 +134,16 @@ public class KLineGestureView extends KLineStockView {
             if (null == e)
                 return false;
             if (e.getX() > topRect.left && e.getX() < topRect.right && (e.getY() > topRect.top && e.getY() < topRect.bottom || e.getY() > bottomRect.top && e.getY() < bottomRect.bottom)) {
-                kLWidthSub = (kLWidthSub + 1) % kLWidthArray.length;
-                valueStock = (int) (topRect.width() / kLWidthArray[kLWidthSub]); // 修改显示数量
-                int centerDeviant = (showQuotationBeanList.size() + valueStock) / 2
-                        + 1 + deviant; // 偏移后最后一个坐标点的坐标
-                if (centerDeviant < mDatas.size()) {
-                    leftDeviant = mDatas.size() - centerDeviant;
+                float kLWidthNews;
+                if (kLWidth >= maxKLwidth) {
+                    kLWidthNews = kLWidthOld;
                 } else {
-                    leftDeviant = 0;
+                    kLWidthNews = 1.5f * kLWidth;
                 }
-                invalidate();
+                if (kLWidthNews > maxKLwidth) {
+                    kLWidthNews = maxKLwidth;
+                }
+                setkLWidth(kLWidthNews, true);
             }
             return true;
         }
@@ -211,13 +164,13 @@ public class KLineGestureView extends KLineStockView {
             if (isShowIndicateLine) {
                 float x = e2.getX();
                 if (x >= topRect.left
-                        && x <= lastX + kLWidthArray[kLWidthSub] / 2) {
+                        && x <= lastX + kLWidth / 2) {
                     scollX = x;
                     invalidate();
                 }
             } else {
                 int addDeviant = (int) -Math
-                        .rint((distanceX / kLWidthArray[kLWidthSub]));
+                        .rint((distanceX / kLWidth));
                 if (distanceX < 0) {
                     // 往左滑动
                     // addDeviant+=1;
@@ -259,7 +212,7 @@ public class KLineGestureView extends KLineStockView {
             float x = e.getX();
             float y = e.getY();
             if (x > topRect.left
-                    && x <= topRect.left + kLWidthArray[kLWidthSub]
+                    && x <= topRect.left + kLWidth
                     * showQuotationBeanList.size() && y > topRect.top && y < bottomRect.bottom) {
                 if (isScreen) {
                     if (!isShowIndicateLine) {
