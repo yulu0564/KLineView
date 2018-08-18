@@ -1,11 +1,16 @@
 package com.yulu.klineview.view.scolltime;
 
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.graphics.Canvas;
+import android.graphics.LinearGradient;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.PorterDuffXfermode;
+import android.graphics.Shader;
 import android.util.AttributeSet;
 
+import com.yulu.klineview.R;
 import com.yulu.klineview.algorithm.BiasUtils;
 import com.yulu.klineview.algorithm.CciUtils;
 import com.yulu.klineview.algorithm.KdjUtils;
@@ -61,6 +66,13 @@ public class TimeScollView extends BaseKlineView {
         setMaxKLwidth(dip2px(50));
         setMinKLwidth(dip2px(2));
         super.initBaseKline(attrs);
+        if (attrs != null) {
+            TypedArray mTypedArray = mContext.obtainStyledAttributes(attrs,
+                    R.styleable.BaseTimeLineView);
+            setRTPriceArcColor(mTypedArray.getColor(R.styleable.BaseTimeLineView_rTPriceArcColor, RTPriceArcColor));
+            RTPriceLineColor = mTypedArray.getColor(R.styleable.BaseTimeLineView_rTPriceLineColor, RTPriceLineColor);
+
+        }
     }
 
     @Override
@@ -126,7 +138,7 @@ public class TimeScollView extends BaseKlineView {
                 String title = null;
                 switch (TARGET_FOOTER_INDEX) {
                     case 0:
-                        title = NumberUtils.getTwoStep((maxFT - ordinateValue * i));
+                        title = NumberUtils.getTwoStepStr((maxFT - ordinateValue * i));
                         break;
                     case 1:
                     case 2:
@@ -165,7 +177,7 @@ public class TimeScollView extends BaseKlineView {
      */
     @Override
     protected void drawAllYLine(Canvas mCanvas) {
-        for (Tagging mData: taggings) {
+        for (Tagging mData : taggings) {
             setText(mData.getText(), mData.getX(), mData.getY(), mCanvas, mData.getAlign(), textDefaultColor,
                     10);
         }
@@ -232,6 +244,7 @@ public class TimeScollView extends BaseKlineView {
             float avgY5 = 0;
             float avgY10 = 0;
             float avgY30 = 0;
+
             if (initAverageData5 != null
                     && initAverageData5.length > i) {
                 avgY5 = getCutoffKLY((initAverageData5[i]));
@@ -255,17 +268,16 @@ public class TimeScollView extends BaseKlineView {
             if (i != 0 && initAverageData30[i - 1] > 0) {
                 mCanvas.drawLine(lastX, lastY30, teamLastX, avgY30, avgY30Paint);
             }
-            if(i==offset) {
-                pathTime.moveTo(startX + kLWidth / 2, closeY);
-                pathTime2.moveTo(startX + kLWidth / 2, topRect.bottom);
-            }else{
-                pathTime.lineTo(startX + kLWidth / 2, closeY);
+            if (i == offset) {
+                pathTime.moveTo(teamLastX, closeY);
+                pathTime2.moveTo(teamLastX, topRect.bottom);
+            } else {
+                pathTime.lineTo(teamLastX, closeY);
             }
-            pathTime2.lineTo(startX + kLWidth / 2, closeY);
+            pathTime2.lineTo(teamLastX, closeY);
 
-            if (i==maxWidthNum-1) {
-                pathTime2.lineTo(startX + kLWidth / 2, topRect.bottom);
-//                pathTime2.lineTo(bottomRect.left + offset * kLWidth, topRect.bottom);
+            if (i == maxWidthNum - 1) {
+                pathTime2.lineTo(teamLastX, topRect.bottom);
             }
 
             Paint mDrawPaint;
@@ -300,7 +312,7 @@ public class TimeScollView extends BaseKlineView {
                             } else {
                                 mMacdPaint = mPingPaint;
                             }
-                            mCanvas.drawLine(startX + kLWidth / 2,
+                            mCanvas.drawLine(teamLastX,
                                     farPointsY, teamLastX, getCutoffFTY(macdMap.get("macd")[i]), mMacdPaint);
                         }
 
@@ -460,6 +472,7 @@ public class TimeScollView extends BaseKlineView {
             startX += kLWidth;
         }
         mCanvas.drawPath(pathTime, mTimeLinePaint);  //分数线
+        updateTimeLineRectPaint();
         mCanvas.drawPath(pathTime2, mTimeLineRectPaint);  //闭合区域
         drawIndicateLine(mCanvas, indicateLineIndex, indicateLineY);
     }
@@ -645,9 +658,10 @@ public class TimeScollView extends BaseKlineView {
 
     public Paint mTimeLinePaint;  //分时画笔
     public Paint mTimeLineRectPaint;  //闭合区域画笔
-
-    protected int RTPriceArcColor = 0x50047CC6;// 分时阴影部分
+    protected int RTPriceArcColor = 0x80047CC6;// 分时阴影部分
+    protected int RTPriceArcColor2 =0x00047CC6;// 分时阴影部分
     protected int RTPriceLineColor = 0xFF047CC6;// 分时线的颜色
+
     protected void initTimeLine() {
         if (mTimeLinePaint == null) {
             mTimeLinePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -660,13 +674,35 @@ public class TimeScollView extends BaseKlineView {
             mTimeLineRectPaint = new Paint();
             mTimeLineRectPaint.setStyle(Paint.Style.FILL);
             // 渐变的颜色
-//            LinearGradient lg = new LinearGradient(topRect.left, topRect.top, topRect.right, topRect.bottom, RTPriceArcColor,
-//                    RTPriceLineColor, Shader.TileMode.CLAMP);// CLAMP重复最后一个颜色至最后
-//            mTimeLineRectPaint.setShader(lg);
-//            mTimeLineRectPaint.setXfermode(new PorterDuffXfermode(
-//                    android.graphics.PorterDuff.Mode.SRC_ATOP));
-            mTimeLineRectPaint.setColor(RTPriceArcColor);
+            LinearGradient lg = new LinearGradient(topRect.left + offset * kLWidth, topRect.top, topRect.right + offset * kLWidth, topRect.bottom, RTPriceArcColor2,
+                    RTPriceArcColor, Shader.TileMode.CLAMP);// CLAMP重复最后一个颜色至最后
+            mTimeLineRectPaint.setShader(lg);
+            mTimeLineRectPaint.setXfermode(new PorterDuffXfermode(
+                    android.graphics.PorterDuff.Mode.SRC_ATOP));
+//            mTimeLineRectPaint.setColor(RTPriceArcColor);
 
         }
+    }
+
+    protected void updateTimeLineRectPaint() {
+        if (mTimeLineRectPaint == null) {
+            mTimeLineRectPaint = new Paint();
+            mTimeLineRectPaint.setStyle(Paint.Style.FILL);
+            // 渐变的颜色
+            LinearGradient lg = new LinearGradient(topRect.left + offset * kLWidth, topRect.top, topRect.right + offset * kLWidth, topRect.bottom, RTPriceArcColor2,
+                    RTPriceArcColor, Shader.TileMode.CLAMP);// CLAMP重复最后一个颜色至最后
+            mTimeLineRectPaint.setShader(lg);
+            mTimeLineRectPaint.setXfermode(new PorterDuffXfermode(
+                    android.graphics.PorterDuff.Mode.SRC_ATOP));
+        } else {
+            LinearGradient lg = new LinearGradient(topRect.left + offset * kLWidth, topRect.top, topRect.right + offset * kLWidth, topRect.bottom, RTPriceArcColor2,
+                    RTPriceArcColor, Shader.TileMode.CLAMP);// CLAMP重复最后一个颜色至最后
+            mTimeLineRectPaint.setShader(lg);
+        }
+    }
+
+    public void setRTPriceArcColor(int RTPriceArcColor) {
+        this.RTPriceArcColor = RTPriceArcColor;
+        this.RTPriceArcColor2 = RTPriceArcColor % 0x1000000;
     }
 }
