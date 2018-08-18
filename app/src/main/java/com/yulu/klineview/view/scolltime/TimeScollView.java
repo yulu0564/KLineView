@@ -14,6 +14,8 @@ import com.yulu.klineview.R;
 import com.yulu.klineview.algorithm.BiasUtils;
 import com.yulu.klineview.algorithm.CciUtils;
 import com.yulu.klineview.algorithm.KdjUtils;
+import com.yulu.klineview.algorithm.MAUtils;
+import com.yulu.klineview.algorithm.MacdUtils;
 import com.yulu.klineview.algorithm.RsiUtils;
 import com.yulu.klineview.bean.QuotationBean;
 import com.yulu.klineview.bean.Tagging;
@@ -37,6 +39,7 @@ public class TimeScollView extends BaseKlineView {
 
     private int YcutoffCount;  //Y轴下标数量
     private int yLineNum = 5;//Y轴平分数量
+    protected double[] initAverageData60 = null;
 
     public TimeScollView(Context context) {
         this(context, null);
@@ -76,6 +79,12 @@ public class TimeScollView extends BaseKlineView {
     }
 
     @Override
+    protected void initData() {
+        super.initData();
+        initAverageData60 = MAUtils.calcAverageData(mDatas,60);
+    }
+
+    @Override
     protected void initDarw() {
 
     }
@@ -94,7 +103,7 @@ public class TimeScollView extends BaseKlineView {
             float cutoffY = cutoffHeight * i + topRect.top;
             if (i != 0 && i != 4) {
                 Path path = new Path();
-                path.moveTo(0, cutoffY);
+                path.moveTo( topRect.left+offsetWidth, cutoffY);
                 path.lineTo(topRect.right + offsetWidth, cutoffY);
                 mCanvas.drawPath(path, mXLinePaint);
             }
@@ -124,7 +133,7 @@ public class TimeScollView extends BaseKlineView {
             float cutoffY = cutoffHeight * i + bottomRect.top;
             if (i != 0 && i != 3) {
                 Path path = new Path();
-                path.moveTo(bottomRect.left, cutoffY);
+                path.moveTo(bottomRect.left+ offsetWidth, cutoffY);
                 path.lineTo(bottomRect.right + offsetWidth, cutoffY);
                 mCanvas.drawPath(path, mXLinePaint);
             }
@@ -201,13 +210,34 @@ public class TimeScollView extends BaseKlineView {
         mCanvas.drawRect(bottomRect.left + offsetWidth - borderlineWidth, bottomRect.top - borderlineWidth, bottomRect.right + offsetWidth + borderlineWidth, bottomRect.bottom + borderlineWidth, mBorderPaint);
     }
 
+
+    /**
+     * 绘制头部M5等一些的内容
+     */
+    protected void drawTop(Canvas mCanvas, int indicateLineIndex) {
+
+        String titleM60;
+        titleM60 = "M60:";
+        if (initAverageData60 != null
+                && initAverageData60.length > indicateLineIndex
+                && initAverageData60[indicateLineIndex] > 0) {
+            titleM60 = titleM60
+                    + NumberUtils.getTwoStep(initAverageData60[indicateLineIndex]);
+        } else {
+            titleM60 = titleM60 + "--";
+        }
+        float x = setTextR(titleM60, topRect.left + offsetWidth, topRect.top - dip2px(5), mCanvas, Paint.Align.LEFT, colorAvlData30, 10);
+
+
+    }
+
     // 绘制K线图
     @Override
     protected void drawKLine(Canvas mCanvas) {
         initTimeLine();
         int indicateLineIndex = 0;
         float indicateLineY = 0;
-        float lastY5 = -1, lastY10 = -1, lastY30 = -1;
+        float lastY60 = -1;
         lastX = -1; // 绘图时X的历史值
         float startX = bottomRect.left + offset * kLWidth;
 
@@ -241,33 +271,18 @@ public class TimeScollView extends BaseKlineView {
             double amount = mQuotationBean.getAmount(); // 成交额
             float closeY = getCutoffKLY(close); // 收盘价的坐标
             // 五日十日三十日均线
-            float avgY5 = 0;
-            float avgY10 = 0;
-            float avgY30 = 0;
+            float avgY60 = 0;
 
-            if (initAverageData5 != null
-                    && initAverageData5.length > i) {
-                avgY5 = getCutoffKLY((initAverageData5[i]));
-            }
-            if (initAverageData10 != null
-                    && initAverageData10.length > i) {
-                avgY10 = getCutoffKLY((initAverageData10[i]));
-            }
-            if (initAverageData30 != null
-                    && initAverageData30.length > i) {
-                avgY30 = getCutoffKLY((initAverageData30[i]));
+            if (initAverageData60 != null
+                    && initAverageData60.length > i) {
+                avgY60 = getCutoffKLY((initAverageData60[i]));
             }
 
             float teamLastX = startX + kLWidth / 2;
-            if (i != 0 && initAverageData5[i - 1] > 0) {
-                mCanvas.drawLine(lastX, lastY5, teamLastX, avgY5, avgY5Paint);
+            if (i != 0 && initAverageData60[i - 1] > 0) {
+                mCanvas.drawLine(lastX, lastY60, teamLastX, avgY60, avgY30Paint);
             }
-            if (i != 0 && initAverageData10[i - 1] > 0) {
-                mCanvas.drawLine(lastX, lastY10, teamLastX, avgY10, avgY10Paint);
-            }
-            if (i != 0 && initAverageData30[i - 1] > 0) {
-                mCanvas.drawLine(lastX, lastY30, teamLastX, avgY30, avgY30Paint);
-            }
+
             if (i == offset) {
                 pathTime.moveTo(teamLastX, closeY);
                 pathTime2.moveTo(teamLastX, topRect.bottom);
@@ -303,7 +318,7 @@ public class TimeScollView extends BaseKlineView {
                     // 绘制MACD图
                     float farPointsY = getCutoffFTY(0);
                     if (macdMap != null) {
-                        if (macdMap.get("macd") != null && macdMap.get("macd")[i] != 0) {
+                        if (macdMap.get(MacdUtils.MACD) != null && macdMap.get(MacdUtils.MACD)[i] != 0) {
                             Paint mMacdPaint;
                             if (close < open) {
                                 mMacdPaint = mFallPaint;
@@ -313,19 +328,19 @@ public class TimeScollView extends BaseKlineView {
                                 mMacdPaint = mPingPaint;
                             }
                             mCanvas.drawLine(teamLastX,
-                                    farPointsY, teamLastX, getCutoffFTY(macdMap.get("macd")[i]), mMacdPaint);
+                                    farPointsY, teamLastX, getCutoffFTY(macdMap.get(MacdUtils.MACD)[i]), mMacdPaint);
                         }
 
-                        if (macdMap.get("diff") != null) {
-                            float tempDiffY = getCutoffFTY(macdMap.get("diff")[i]); // 最新数据
+                        if (macdMap.get(MacdUtils.MACD_DIFF) != null) {
+                            float tempDiffY = getCutoffFTY(macdMap.get(MacdUtils.MACD_DIFF)[i]); // 最新数据
                             if (i != 0) {
                                 mCanvas.drawLine(lastX, diffY, teamLastX,
                                         tempDiffY, avgY30Paint);
                             }
                             diffY = tempDiffY;
                         }
-                        if (macdMap.get("dea") != null) {
-                            float tempDeaY = getCutoffFTY(macdMap.get("dea")[i]); // 最新数据
+                        if (macdMap.get(MacdUtils.MACD_DEA) != null) {
+                            float tempDeaY = getCutoffFTY(macdMap.get(MacdUtils.MACD_DEA)[i]); // 最新数据
                             if (i != 0) {
                                 mCanvas.drawLine(lastX, deaY, teamLastX, tempDeaY,
                                         avgY10Paint);
@@ -465,9 +480,7 @@ public class TimeScollView extends BaseKlineView {
                 indicateLineIndex = i;
                 indicateLineY = closeY;
             }
-            lastY5 = avgY5;
-            lastY10 = avgY10;
-            lastY30 = avgY30;
+            lastY60 = avgY60;
             lastX = teamLastX;
             startX += kLWidth;
         }
@@ -490,15 +503,15 @@ public class TimeScollView extends BaseKlineView {
         switch (TARGET_FOOTER_INDEX) {
             case 1:
                 if (macdMap != null) {
-                    setFTMaxAndMin(offset, maxWidthNum, macdMap.get("dea"), macdMap.get("diff"),
-                            macdMap.get("macd"));
+                    setFTMaxAndMin(offset, maxWidthNum, macdMap.get(MacdUtils.MACD_DEA), macdMap.get(MacdUtils.MACD_DIFF),
+                            macdMap.get(MacdUtils.MACD));
                 }
                 break;
             case 2:
 
                 if (kdjMap != null) {
-                    setFTMaxAndMin(offset, maxWidthNum, kdjMap.get("k"), kdjMap.get("d"),
-                            kdjMap.get("j"));
+                    setFTMaxAndMin(offset, maxWidthNum, kdjMap.get(KdjUtils.KDJ_K), kdjMap.get(KdjUtils.KDJ_D),
+                            kdjMap.get(KdjUtils.KDJ_J));
                 }
                 break;
             case 3:
@@ -507,13 +520,13 @@ public class TimeScollView extends BaseKlineView {
                 break;
             case 4:
                 if (biasMap != null) {
-                    setFTMaxAndMin(offset, maxWidthNum, biasMap.get("bias6"), biasMap.get("bias12"),
-                            biasMap.get("bias24"));
+                    setFTMaxAndMin(offset, maxWidthNum, biasMap.get(BiasUtils.BIAS6), biasMap.get(BiasUtils.BIAS12),
+                            biasMap.get(BiasUtils.BIAS24));
                 }
                 break;
             case 5:
                 if (cciMap != null) {
-                    setFTMaxAndMin(offset, maxWidthNum, cciMap.get("cci"));
+                    setFTMaxAndMin(offset, maxWidthNum, cciMap.get(CciUtils.CCI));
                 }
                 break;
         }
@@ -543,29 +556,13 @@ public class TimeScollView extends BaseKlineView {
                 maxFT = maxFT > mQuotationBean.getAmount() ? maxFT : mQuotationBean
                         .getAmount();
             }
-            if (initAverageData5 != null
-                    && initAverageData5.length > i
-                    && initAverageData5[i] > 0) {
-                minKL = minKL < initAverageData5[i] ? minKL
-                        : initAverageData5[i];
-                maxKL = maxKL > initAverageData5[i] ? maxKL
-                        : initAverageData5[i];
-            }
-            if (initAverageData10 != null
-                    && initAverageData10.length > i
-                    && initAverageData10[i] > 0) {
-                minKL = minKL < initAverageData10[i] ? minKL
-                        : initAverageData10[i];
-                maxKL = maxKL > initAverageData10[i] ? maxKL
-                        : initAverageData10[i];
-            }
-            if (initAverageData30 != null
-                    && initAverageData30.length > i
-                    && initAverageData30[i] > 0) {
-                minKL = minKL < initAverageData30[i] ? minKL
-                        : initAverageData30[i];
-                maxKL = maxKL > initAverageData30[i] ? maxKL
-                        : initAverageData30[i];
+            if (initAverageData60 != null
+                    && initAverageData60.length > i
+                    && initAverageData60[i] > 0) {
+                minKL = minKL < initAverageData60[i] ? minKL
+                        : initAverageData60[i];
+                maxKL = maxKL > initAverageData60[i] ? maxKL
+                        : initAverageData60[i];
             }
         }
         if (maxKL == minKL) {

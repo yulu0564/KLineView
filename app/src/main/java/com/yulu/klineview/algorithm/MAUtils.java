@@ -10,7 +10,6 @@ import java.util.Map;
  * MA均价的算法
  */
 public class MAUtils {
-    public static int[] ma_default = {5, 10, 30};   //默认的5日，10日，30日
     public final static String MA_5 = "5";
     public final static String MA_10 = "10";
     public final static String MA_30 = "30";

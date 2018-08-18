@@ -21,7 +21,7 @@ import java.util.List;
 /**
  * K线图(主线程绘制）
  */
-public class KLineStockView extends BaseKlineView {
+public class KLineStockView extends BaseKlineBarView {
 
     protected int deviant = 0; // 偏移量
 

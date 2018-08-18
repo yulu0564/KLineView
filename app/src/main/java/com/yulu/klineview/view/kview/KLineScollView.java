@@ -9,6 +9,7 @@ import android.util.AttributeSet;
 import com.yulu.klineview.algorithm.BiasUtils;
 import com.yulu.klineview.algorithm.CciUtils;
 import com.yulu.klineview.algorithm.KdjUtils;
+import com.yulu.klineview.algorithm.MacdUtils;
 import com.yulu.klineview.algorithm.RsiUtils;
 import com.yulu.klineview.bean.QuotationBean;
 import com.yulu.klineview.bean.Tagging;
@@ -21,7 +22,7 @@ import java.util.List;
 /**
  * K线图(主线程绘制）
  */
-public class KLineScollView extends BaseKlineView {
+public class KLineScollView extends BaseKlineBarView {
 
     protected int offsetWidthMax;
 
@@ -81,7 +82,7 @@ public class KLineScollView extends BaseKlineView {
             float cutoffY = cutoffHeight * i + topRect.top;
             if (i != 0 && i != 4) {
                 Path path = new Path();
-                path.moveTo(0, cutoffY);
+                path.moveTo(topRect.left+ offsetWidth, cutoffY);
                 path.lineTo(topRect.right + offsetWidth, cutoffY);
                 mCanvas.drawPath(path, mXLinePaint);
             }
@@ -111,7 +112,7 @@ public class KLineScollView extends BaseKlineView {
             float cutoffY = cutoffHeight * i + bottomRect.top;
             if (i != 0 && i != 3) {
                 Path path = new Path();
-                path.moveTo(bottomRect.left, cutoffY);
+                path.moveTo(bottomRect.left+ offsetWidth, cutoffY);
                 path.lineTo(bottomRect.right + offsetWidth, cutoffY);
                 mCanvas.drawPath(path, mXLinePaint);
             }
@@ -291,7 +292,7 @@ public class KLineScollView extends BaseKlineView {
                     // 绘制MACD图
                     float farPointsY = getCutoffFTY(0);
                     if (macdMap != null) {
-                        if (macdMap.get("macd") != null && macdMap.get("macd")[i] != 0) {
+                        if (macdMap.get(MacdUtils.MACD) != null && macdMap.get(MacdUtils.MACD)[i] != 0) {
                             Paint mMacdPaint;
                             if (close < open) {
                                 mMacdPaint = mFallPaint;
@@ -301,19 +302,19 @@ public class KLineScollView extends BaseKlineView {
                                 mMacdPaint = mPingPaint;
                             }
                             mCanvas.drawLine(startX + kLWidth / 2,
-                                    farPointsY, teamLastX, getCutoffFTY(macdMap.get("macd")[i]), mMacdPaint);
+                                    farPointsY, teamLastX, getCutoffFTY(macdMap.get(MacdUtils.MACD)[i]), mMacdPaint);
                         }
 
-                        if (macdMap.get("diff") != null) {
-                            float tempDiffY = getCutoffFTY(macdMap.get("diff")[i]); // 最新数据
+                        if (macdMap.get(MacdUtils.MACD_DIFF) != null) {
+                            float tempDiffY = getCutoffFTY(macdMap.get(MacdUtils.MACD_DIFF)[i]); // 最新数据
                             if (i != 0) {
                                 mCanvas.drawLine(lastX, diffY, teamLastX,
                                         tempDiffY, avgY30Paint);
                             }
                             diffY = tempDiffY;
                         }
-                        if (macdMap.get("dea") != null) {
-                            float tempDeaY = getCutoffFTY(macdMap.get("dea")[i]); // 最新数据
+                        if (macdMap.get(MacdUtils.MACD_DEA) != null) {
+                            float tempDeaY = getCutoffFTY(macdMap.get(MacdUtils.MACD_DEA)[i]); // 最新数据
                             if (i != 0) {
                                 mCanvas.drawLine(lastX, deaY, teamLastX, tempDeaY,
                                         avgY10Paint);
@@ -462,6 +463,7 @@ public class KLineScollView extends BaseKlineView {
         drawIndicateLine(mCanvas, indicateLineIndex, indicateLineY);
     }
 
+
     protected void setOffsetWidth(int offsetWidth) {
         this.offsetWidth = offsetWidth;
         if (mDatas.size() > horizontalNum) {
@@ -475,15 +477,15 @@ public class KLineScollView extends BaseKlineView {
         switch (TARGET_FOOTER_INDEX) {
             case 1:
                 if (macdMap != null) {
-                    setFTMaxAndMin(offset, maxWidthNum, macdMap.get("dea"), macdMap.get("diff"),
-                            macdMap.get("macd"));
+                    setFTMaxAndMin(offset, maxWidthNum, macdMap.get(MacdUtils.MACD_DEA), macdMap.get(MacdUtils.MACD_DIFF),
+                            macdMap.get(MacdUtils.MACD));
                 }
                 break;
             case 2:
 
                 if (kdjMap != null) {
-                    setFTMaxAndMin(offset, maxWidthNum, kdjMap.get("k"), kdjMap.get("d"),
-                            kdjMap.get("j"));
+                    setFTMaxAndMin(offset, maxWidthNum, kdjMap.get(KdjUtils.KDJ_K), kdjMap.get(KdjUtils.KDJ_D),
+                            kdjMap.get(KdjUtils.KDJ_J));
                 }
                 break;
             case 3:
@@ -492,13 +494,13 @@ public class KLineScollView extends BaseKlineView {
                 break;
             case 4:
                 if (biasMap != null) {
-                    setFTMaxAndMin(offset, maxWidthNum, biasMap.get("bias6"), biasMap.get("bias12"),
-                            biasMap.get("bias24"));
+                    setFTMaxAndMin(offset, maxWidthNum, biasMap.get(BiasUtils.BIAS6), biasMap.get(BiasUtils.BIAS12),
+                            biasMap.get(BiasUtils.BIAS24));
                 }
                 break;
             case 5:
                 if (cciMap != null) {
-                    setFTMaxAndMin(offset, maxWidthNum, cciMap.get("cci"));
+                    setFTMaxAndMin(offset, maxWidthNum, cciMap.get(CciUtils.CCI));
                 }
                 break;
         }
