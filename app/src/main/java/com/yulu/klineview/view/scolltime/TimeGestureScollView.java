@@ -1,26 +1,28 @@
-package com.yulu.klineview.view.kview;
+package com.yulu.klineview.view.scolltime;
 
 import android.content.Context;
 import android.util.AttributeSet;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 
+import com.yulu.klineview.view.kview.KLineScollView;
+
 /**
- * K线图手势
+ * 分时K线图手势
  */
-public class KLineGestureScollView extends KLineScollView {
+public class TimeGestureScollView extends TimeScollView {
     protected GestureDetector mGestureDetector;
 
 
-    public KLineGestureScollView(Context context) {
+    public TimeGestureScollView(Context context) {
         this(context, null);
     }
 
-    public KLineGestureScollView(Context context, AttributeSet attrs) {
+    public TimeGestureScollView(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
     }
 
-    public KLineGestureScollView(Context context, AttributeSet attrs, int defStyle) {
+    public TimeGestureScollView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
     }
 
@@ -140,7 +142,7 @@ public class KLineGestureScollView extends KLineScollView {
         public void onLongPress(MotionEvent e) {
             if (!isShowIndicateLine) {
                 closeIndicateLine();
-                KLineGestureScollView.this.onScroll(e);
+                TimeGestureScollView.this.onScroll(e);
             }
         }
 

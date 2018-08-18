@@ -5,20 +5,20 @@ import android.util.AttributeSet;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 
-public class TimeGestureView extends TimeStockView {
+public class NoScollTimeGestureView extends NoScollTimeStockView {
     protected GestureDetector mGestureDetector;
 
-    public TimeGestureView(Context context) {
+    public NoScollTimeGestureView(Context context) {
         super(context);
         mGestureDetector = new GestureDetector(mContext, new GestureListener());
     }
 
-    public TimeGestureView(Context context, AttributeSet attrs) {
+    public NoScollTimeGestureView(Context context, AttributeSet attrs) {
         super(context, attrs);
         mGestureDetector = new GestureDetector(mContext, new GestureListener());
     }
 
-    public TimeGestureView(Context context, AttributeSet attrs, int defStyle) {
+    public NoScollTimeGestureView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
         mGestureDetector = new GestureDetector(mContext, new GestureListener());
     }
@@ -80,7 +80,7 @@ public class TimeGestureView extends TimeStockView {
 
         public void onLongPress(MotionEvent e) {
             isShowIndicateLine = true;
-            TimeGestureView.this.onScroll(e);
+            NoScollTimeGestureView.this.onScroll(e);
         }
 
         // 单击不滑动

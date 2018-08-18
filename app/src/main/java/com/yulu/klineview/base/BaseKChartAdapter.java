@@ -41,7 +41,7 @@ public abstract class BaseKChartAdapter<T> {
                 observer.mDatas.addAll(0,mQuotations);
                 onRefresh();
             }
-            datas.addAll(data);
+            datas.addAll(0,data);
         }
     }
 
@@ -53,12 +53,12 @@ public abstract class BaseKChartAdapter<T> {
             if (observer != null) {
                 List<QuotationBean> mQuotations = new ArrayList<>();
                 for (int i = 0; i < data.size(); i++) {
-                    mQuotations.add(0,getData(new QuotationBean(), data.get(i), i));
+                    mQuotations.add(getData(new QuotationBean(), data.get(i), i));
                 }
-                observer.mDatas.addAll(0, mQuotations);
+                observer.mDatas.addAll(mQuotations);
                 onRefresh();
             }
-            datas.addAll(0, data);
+            datas.addAll(data);
         }
     }
 
@@ -85,13 +85,14 @@ public abstract class BaseKChartAdapter<T> {
         List<QuotationBean> mQuotations = new ArrayList<>();
         for (int i = 0; i < datas.size(); i++) {
             if (observer.mDatas.size() > i) {
-                mQuotations.add(0,getData(observer.mDatas.get(i), getItem(i), i));
+                mQuotations.add(getData(observer.mDatas.get(i), getItem(i), i));
             } else {
-                mQuotations.add(0,getData(new QuotationBean(), getItem(i), i));
+                mQuotations.add(getData(new QuotationBean(), getItem(i), i));
             }
         }
         observer.mDatas.clear();
         observer.mDatas.addAll(mQuotations);
+        onRefresh();
         onRefresh();
     }
 
@@ -103,7 +104,7 @@ public abstract class BaseKChartAdapter<T> {
                 getData(data, getItem(i), i);
             } else {
                 data = new QuotationBean();
-                observer.mDatas.add(0,getData(data, getItem(i), i));
+                observer.mDatas.add(getData(data, getItem(i), i));
             }
         }
         onRefresh();

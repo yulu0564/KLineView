@@ -32,5 +32,12 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(mIntent);
             }
         });
+        findViewById(R.id.tv_time_line2).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent mIntent = new Intent(MainActivity.this, TimeLineActivity2.class);
+                startActivity(mIntent);
+            }
+        });
     }
 }

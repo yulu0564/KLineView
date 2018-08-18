@@ -27,12 +27,12 @@ public abstract class BaseStockView extends BaseChartView implements ChartObserv
     protected int colorFall = 0xFF33AB11; // 跌的颜色
     protected int colorPing = 0xFFBABABA; // 平的颜色
     protected int colorCoordinates = 0xFFBEBEBE; // 坐标轴的颜色
+    protected int textDefaultColor = 0xFF4C4C4C;  //字的颜色
     protected int colorFrame = 0xFFBEBEBE; // 边框的颜色
     protected int borderColor = 0xDD313544; // 白色透明背景
     protected int indexLineColor = 0xFF797979;// 索引线颜色
-    protected int popupBorderColor = 0xBB313544; // 弹出边框色
     protected int textIndicateColor = 0xFF4C4C4C;  //字的颜色;
-    protected int textDefaultColor = 0xFF4C4C4C;  //字的颜色
+    protected int popupBorderColor = 0xBB313544; // 弹出边框色
     protected int colorTransWhite = 0x99FFFFFF;
 
     protected int indicateRectColor = 0xFFEEEEEE; //索引弹框背景色

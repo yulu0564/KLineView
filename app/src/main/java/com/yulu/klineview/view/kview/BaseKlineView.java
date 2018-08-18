@@ -59,6 +59,8 @@ public abstract class BaseKlineView extends BaseStockView {
     protected double maxFT = 0; // 坐标最大值
     protected double minFT = 0; // 坐标最小值
 
+    private int TIME_UNIT;  //0：日为单位，1：分钟为单位
+
     /**
      * Macd数据
      */
@@ -100,7 +102,6 @@ public abstract class BaseKlineView extends BaseStockView {
     }
 
 
-
     public BaseKlineView(Context context) {
         this(context, null);
     }
@@ -133,7 +134,8 @@ public abstract class BaseKlineView extends BaseStockView {
             setkLWidth(mTypedArray.getDimensionPixelSize(R.styleable.BaseKlineView_kLWidthOld, (int) dip2px(10)));
             setMaxKLwidth(mTypedArray.getDimensionPixelSize(R.styleable.BaseKlineView_maxKLwidth, (int) dip2px(50)));
             setMinKLwidth(mTypedArray.getDimensionPixelSize(R.styleable.BaseKlineView_minKLwidth, (int) dip2px(2)));
-            TARGET_FOOTER_INDEX = mTypedArray.getInt(R.styleable.BaseKlineView_targetFooterIndex,0);
+            TARGET_FOOTER_INDEX = mTypedArray.getInt(R.styleable.BaseKlineView_targetFooterIndex, 0);
+            TIME_UNIT = mTypedArray.getInt(R.styleable.BaseKlineView_timeUnit, 0);
         }
 
         initXLine();
@@ -417,7 +419,7 @@ public abstract class BaseKlineView extends BaseStockView {
                                     mCanvas,
                                     Paint.Align.LEFT,
                                     colorAvlData30,
-                                            10);
+                                    10);
                         }
                     }
                     break;
@@ -773,15 +775,32 @@ public abstract class BaseKlineView extends BaseStockView {
      * 设置坐标时间，如果同一年不显示年份
      */
     public String getStockDate(long time) {
-        String newTime = "--";
+        String newTime = "- -";
         Date date = new Date(time);
-        if (lastDate == null || !DateUtils.isSameYear(date, lastDate)) {
-            SimpleDateFormat newDf = new SimpleDateFormat("yyyy/MM/dd");
-            newTime = newDf.format(date);
-        } else {
-            SimpleDateFormat newDf = new SimpleDateFormat("MM/dd");
-            newTime = newDf.format(date);
+        switch (TIME_UNIT) {
+            case 0:
+                if (lastDate == null || !DateUtils.isSameYear(date, lastDate)) {
+                    SimpleDateFormat newDf = new SimpleDateFormat("yyyy/MM/dd");
+                    newTime = newDf.format(date);
+                } else {
+                    SimpleDateFormat newDf = new SimpleDateFormat("MM/dd");
+                    newTime = newDf.format(date);
+                }
+                break;
+            case 1:
+                if (lastDate == null || !DateUtils.isSameYear(date, lastDate)) {
+                    SimpleDateFormat newDf = new SimpleDateFormat("yyyy/MM/dd HH:mm");
+                    newTime = newDf.format(date);
+                } else if (lastDate == null || !DateUtils.isSameDay(date, lastDate)) {
+                    SimpleDateFormat newDf = new SimpleDateFormat("MM/dd HH:mm");
+                    newTime = newDf.format(date);
+                } else {
+                    SimpleDateFormat newDf = new SimpleDateFormat("HH:mm");
+                    newTime = newDf.format(date);
+                }
+                break;
         }
+
         lastDate = date;
         return newTime;
     }
@@ -789,7 +808,7 @@ public abstract class BaseKlineView extends BaseStockView {
     /**
      * 设置副图坐标的最大和最小值
      */
-    public void setFTMaxAndMin(int start,int stop,double[]... array) {
+    public void setFTMaxAndMin(int start, int stop, double[]... array) {
         minFT = 0;
         maxFT = 0;
         if (array == null) {
@@ -850,5 +869,13 @@ public abstract class BaseKlineView extends BaseStockView {
 
     public void setkLWidth(float kLWidth) {
         kLWidthOld = kLWidth;
+    }
+
+    public int getTIME_UNIT() {
+        return TIME_UNIT;
+    }
+
+    public void setTIME_UNIT(int TIME_UNIT) {
+        this.TIME_UNIT = TIME_UNIT;
     }
 }

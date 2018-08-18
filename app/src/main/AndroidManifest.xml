@@ -24,6 +24,8 @@
             android:screenOrientation="landscape"/>
         <activity android:name=".TimeLineActivity"
             android:screenOrientation="landscape" />
+        <activity android:name=".TimeLineActivity2"
+            android:screenOrientation="landscape" />
     </application>
 
 </manifest>

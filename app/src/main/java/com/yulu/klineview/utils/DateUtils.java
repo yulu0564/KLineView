@@ -24,6 +24,27 @@ public class DateUtils {
     }
 
     /**
+     * 判断dateA、dateB是否为一天
+     */
+    public static boolean isSameDay(Date dateA, Date dateB) {
+        Calendar cal1 = Calendar.getInstance();
+        cal1.setTime(dateA);
+
+        Calendar cal2 = Calendar.getInstance();
+        cal2.setTime(dateB);
+
+        boolean isSameYear = cal1.get(Calendar.YEAR) == cal2
+                .get(Calendar.YEAR);
+        boolean isSameMonth = isSameYear
+                && cal1.get(Calendar.MONTH) == cal2.get(Calendar.MONTH);
+        boolean isSameDate = isSameMonth
+                && cal1.get(Calendar.DAY_OF_MONTH) == cal2
+                .get(Calendar.DAY_OF_MONTH);
+
+        return isSameDate;
+    }
+
+    /**
      * 计算给定时间的前一天
      */
     public static String getNextDay(long time) {

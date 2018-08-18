@@ -15,18 +15,18 @@ import com.yulu.klineview.utils.NumberUtils;
 /**
  * 分时图,主线程绘制
  */
-public class TimeStockView extends BaseTimeLineView {
+public class NoScollTimeStockView extends BaseNoScollTimeLineView {
 
-    public TimeStockView(Context context) {
+    public NoScollTimeStockView(Context context) {
         super(context);
     }
 
-    public TimeStockView(Context context, AttributeSet attrs) {
+    public NoScollTimeStockView(Context context, AttributeSet attrs) {
         super(context, attrs);
     }
 
-    public TimeStockView(Context context, AttributeSet attrs,
-                         int defStyle) {
+    public NoScollTimeStockView(Context context, AttributeSet attrs,
+                                int defStyle) {
         super(context, attrs, defStyle);
     }
 

@@ -7,9 +7,10 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.os.Build;
+import android.support.annotation.Nullable;
 import android.util.ArrayMap;
 import android.util.AttributeSet;
-import android.view.View;
+import android.widget.FrameLayout;
 
 import com.yulu.klineview.utils.DisplayUtils;
 import com.yulu.klineview.utils.DrawImageUtils;
@@ -18,10 +19,7 @@ import com.yulu.klineview.utils.DrawTextUtils;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * 绘图基类
- */
-public abstract class BaseChartView extends View{
+public abstract class BaseChartLinearView extends FrameLayout {
 
     protected Context mContext;
 
@@ -30,17 +28,19 @@ public abstract class BaseChartView extends View{
     private Map<Float, Float> dip2pxMaps;
     private Map<Float, Float> sp2pxMaps;
 
-    public BaseChartView(Context context, AttributeSet attrs) {
-        this(context, attrs, 0);
-    }
-
-    public BaseChartView(Context context, AttributeSet attrs, int defStyle) {
-        super(context, attrs, defStyle);
+    public BaseChartLinearView(Context context) {
+        super(context);
         initBaseChartView(context);
     }
 
-    public BaseChartView(Context context) {
-        this(context, null);
+    public BaseChartLinearView(Context context, @Nullable AttributeSet attrs) {
+        super(context, attrs);
+        initBaseChartView(context);
+    }
+
+    public BaseChartLinearView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+        initBaseChartView(context);
     }
 
 
