@@ -81,7 +81,7 @@ public class TimeScollView extends BaseKlineView {
     @Override
     protected void initData() {
         super.initData();
-        initAverageData60 = MAUtils.calcAverageData(mDatas,60);
+        initAverageData60 = MAUtils.calcAverageData(mDatas, 60);
     }
 
     @Override
@@ -103,7 +103,7 @@ public class TimeScollView extends BaseKlineView {
             float cutoffY = cutoffHeight * i + topRect.top;
             if (i != 0 && i != 4) {
                 Path path = new Path();
-                path.moveTo( topRect.left+offsetWidth, cutoffY);
+                path.moveTo(topRect.left + offsetWidth, cutoffY);
                 path.lineTo(topRect.right + offsetWidth, cutoffY);
                 mCanvas.drawPath(path, mXLinePaint);
             }
@@ -133,7 +133,7 @@ public class TimeScollView extends BaseKlineView {
             float cutoffY = cutoffHeight * i + bottomRect.top;
             if (i != 0 && i != 3) {
                 Path path = new Path();
-                path.moveTo(bottomRect.left+ offsetWidth, cutoffY);
+                path.moveTo(bottomRect.left + offsetWidth, cutoffY);
                 path.lineTo(bottomRect.right + offsetWidth, cutoffY);
                 mCanvas.drawPath(path, mXLinePaint);
             }
@@ -147,7 +147,7 @@ public class TimeScollView extends BaseKlineView {
                 String title = null;
                 switch (TARGET_FOOTER_INDEX) {
                     case 0:
-                        title = NumberUtils.getTwoStepStr((maxFT - ordinateValue * i));
+                        title = ((int) maxFT) + "";
                         break;
                     case 1:
                     case 2:
@@ -268,7 +268,8 @@ public class TimeScollView extends BaseKlineView {
             QuotationBean mQuotationBean = mDatas.get(i);
             double open = mQuotationBean.getOpen(); // 开盘价
             double close = mQuotationBean.getClose(); // 收盘价
-            double amount = mQuotationBean.getAmount(); // 成交额
+//            double amount = mQuotationBean.getAmount(); // 成交额
+            double volume = mQuotationBean.getVolume();
             float closeY = getCutoffKLY(close); // 收盘价的坐标
             // 五日十日三十日均线
             float avgY60 = 0;
@@ -312,7 +313,7 @@ public class TimeScollView extends BaseKlineView {
             switch (TARGET_FOOTER_INDEX) {
                 case 0:
                     // VOL图
-                    mCanvas.drawRect(kLstartX, getCutoffFTY(amount), endX, bottomRect.bottom, mDrawPaint);
+                    mCanvas.drawRect(kLstartX, getCutoffFTY(volume), endX, bottomRect.bottom, mDrawPaint);
                     break;
                 case 1:
                     // 绘制MACD图
@@ -538,11 +539,11 @@ public class TimeScollView extends BaseKlineView {
      * 设置K线坐标的最大和最小值
      */
     public void setKLMaxAndMin() {
-        minKL = mDatas.get(offset).getLow();
-        maxKL = mDatas.get(offset).getHigh();
+        minKL = mDatas.get(offset).getClose();
+        maxKL = mDatas.get(offset).getClose();
         if (TARGET_FOOTER_INDEX == 0) {
             minFT = 0;
-            maxFT = mDatas.get(offset).getAmount();
+            maxFT = mDatas.get(offset).getVolume();
         }
         for (int i = offset; i < maxWidthNum; i++) {
             QuotationBean mQuotationBean = mDatas.get(i);
@@ -553,8 +554,8 @@ public class TimeScollView extends BaseKlineView {
                         : mQuotationBean.getClose();
             }
             if (TARGET_FOOTER_INDEX == 0) {
-                maxFT = maxFT > mQuotationBean.getAmount() ? maxFT : mQuotationBean
-                        .getAmount();
+                maxFT = maxFT > mQuotationBean.getVolume() ? maxFT : mQuotationBean
+                        .getVolume();
             }
             if (initAverageData60 != null
                     && initAverageData60.length > i
@@ -656,7 +657,7 @@ public class TimeScollView extends BaseKlineView {
     public Paint mTimeLinePaint;  //分时画笔
     public Paint mTimeLineRectPaint;  //闭合区域画笔
     protected int RTPriceArcColor = 0x80047CC6;// 分时阴影部分
-    protected int RTPriceArcColor2 =0x00047CC6;// 分时阴影部分
+    protected int RTPriceArcColor2 = 0x00047CC6;// 分时阴影部分
     protected int RTPriceLineColor = 0xFF047CC6;// 分时线的颜色
 
     protected void initTimeLine() {

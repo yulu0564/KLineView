@@ -268,8 +268,8 @@ public class KLineStockView extends BaseKlineBarView {
             double close = mQuotationBean.getClose(); // 收盘价
             double high = mQuotationBean.getHigh(); // 最高价
             double low = mQuotationBean.getLow(); // 最低价
-//            float volume = mQuotationBean.getVolume(); // 成交量
-            double amount = mQuotationBean.getAmount(); // 成交额
+            double volume = mQuotationBean.getVolume(); // 成交量
+//            double amount = mQuotationBean.getAmount(); // 成交额
 
             float highY = getCutoffKLY(high); // 最高价的坐标
             float lowY = getCutoffKLY(low); // 最低价的坐标
@@ -330,7 +330,7 @@ public class KLineStockView extends BaseKlineBarView {
             switch (TARGET_FOOTER_INDEX) {
                 case 0:
                     // VOL图
-                    mCanvas.drawRect(kLstartX, getCutoffFTY(amount), endX, bottomRect.bottom, mDrawPaint);
+                    mCanvas.drawRect(kLstartX, getCutoffFTY(volume), endX, bottomRect.bottom, mDrawPaint);
                     break;
                 case 1:
                     // 绘制MACD图
@@ -535,7 +535,7 @@ public class KLineStockView extends BaseKlineBarView {
         maxKL = showQuotationBeanList.get(0).getHigh();
         minFT = 0;
         if (TARGET_FOOTER_INDEX == 0) {
-            maxFT = showQuotationBeanList.get(0).getAmount();
+            maxFT = showQuotationBeanList.get(0).getVolume();
         }
         for (int i = 0; i < showQuotationBeanList.size(); i++) {
             QuotationBean mQuotationBean = showQuotationBeanList.get(i);
@@ -543,8 +543,8 @@ public class KLineStockView extends BaseKlineBarView {
             maxKL = maxKL > mQuotationBean.getHigh() ? maxKL : mQuotationBean
                     .getHigh();
             if (TARGET_FOOTER_INDEX == 0) {
-                maxFT = maxFT > mQuotationBean.getAmount() ? maxFT : mQuotationBean
-                        .getAmount();
+                maxFT = maxFT > mQuotationBean.getVolume() ? maxFT : mQuotationBean
+                        .getVolume();
             }
             if (initAverageData5 != null
                     && initAverageData5.length > i + deviant

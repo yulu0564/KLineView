@@ -82,7 +82,7 @@ public class KLineScollView extends BaseKlineBarView {
             float cutoffY = cutoffHeight * i + topRect.top;
             if (i != 0 && i != 4) {
                 Path path = new Path();
-                path.moveTo(topRect.left+ offsetWidth, cutoffY);
+                path.moveTo(topRect.left + offsetWidth, cutoffY);
                 path.lineTo(topRect.right + offsetWidth, cutoffY);
                 mCanvas.drawPath(path, mXLinePaint);
             }
@@ -112,7 +112,7 @@ public class KLineScollView extends BaseKlineBarView {
             float cutoffY = cutoffHeight * i + bottomRect.top;
             if (i != 0 && i != 3) {
                 Path path = new Path();
-                path.moveTo(bottomRect.left+ offsetWidth, cutoffY);
+                path.moveTo(bottomRect.left + offsetWidth, cutoffY);
                 path.lineTo(bottomRect.right + offsetWidth, cutoffY);
                 mCanvas.drawPath(path, mXLinePaint);
             }
@@ -165,7 +165,7 @@ public class KLineScollView extends BaseKlineBarView {
      */
     @Override
     protected void drawAllYLine(Canvas mCanvas) {
-        for (Tagging mData: taggings) {
+        for (Tagging mData : taggings) {
             setText(mData.getText(), mData.getX(), mData.getY(), mCanvas, mData.getAlign(), textDefaultColor,
                     10);
         }
@@ -195,6 +195,7 @@ public class KLineScollView extends BaseKlineBarView {
         int indicateLineIndex = 0;
         float indicateLineY = 0;
         float lastY5 = -1, lastY10 = -1, lastY30 = -1;
+        float lastVoY5 = -1, lastVoY10 = -1, lastVoY30 = -1;
         lastX = -1; // 绘图时X的历史值
         float startX = bottomRect.left + offset * kLWidth;
 
@@ -226,7 +227,7 @@ public class KLineScollView extends BaseKlineBarView {
             double close = mQuotationBean.getClose(); // 收盘价
             double high = mQuotationBean.getHigh(); // 最高价
             double low = mQuotationBean.getLow(); // 最低价
-            double amount = mQuotationBean.getAmount(); // 成交额
+            double volume = mQuotationBean.getVolume(); // 成交量
 
             float highY = getCutoffKLY(high); // 最高价的坐标
             float lowY = getCutoffKLY(low); // 最低价的坐标
@@ -236,6 +237,7 @@ public class KLineScollView extends BaseKlineBarView {
             float avgY5 = 0;
             float avgY10 = 0;
             float avgY30 = 0;
+
             if (initAverageData5 != null
                     && initAverageData5.length > i) {
                 avgY5 = getCutoffKLY((initAverageData5[i]));
@@ -286,7 +288,35 @@ public class KLineScollView extends BaseKlineBarView {
             switch (TARGET_FOOTER_INDEX) {
                 case 0:
                     // VOL图
-                    mCanvas.drawRect(kLstartX, getCutoffFTY(amount), endX, bottomRect.bottom, mDrawPaint);
+                    mCanvas.drawRect(kLstartX, getCutoffFTY(volume), endX, bottomRect.bottom, mDrawPaint);
+
+                    float avgVoY5 = 0;
+                    float avgVoY10 = 0;
+                    float avgVoY30 = 0;
+                    if (initVolumeData5 != null
+                            && initVolumeData5.length > i) {
+                        avgVoY5 = getCutoffFTY((initVolumeData5[i]));
+                    }
+                    if (initVolumeData10 != null
+                            && initVolumeData10.length > i) {
+                        avgVoY10 = getCutoffFTY((initVolumeData10[i]));
+                    }
+                    if (initVolumeData30 != null
+                            && initVolumeData30.length > i) {
+                        avgVoY30 = getCutoffFTY((initVolumeData30[i]));
+                    }
+                    if (i != 0 && initVolumeData5[i - 1] > 0) {
+                        mCanvas.drawLine(lastX, lastVoY5, teamLastX, avgVoY5, avgY5Paint);
+                    }
+                    if (i != 0 && initVolumeData10[i - 1] > 0) {
+                        mCanvas.drawLine(lastX, lastVoY10, teamLastX, avgVoY10, avgY10Paint);
+                    }
+                    if (i != 0 && initVolumeData30[i - 1] > 0) {
+                        mCanvas.drawLine(lastX, lastVoY30, teamLastX, avgVoY30, avgY30Paint);
+                    }
+                    lastVoY5 = avgVoY5;
+                    lastVoY10 = avgVoY10;
+                    lastVoY30 = avgVoY30;
                     break;
                 case 1:
                     // 绘制MACD图
@@ -516,7 +546,7 @@ public class KLineScollView extends BaseKlineBarView {
         maxKL = mDatas.get(offset).getHigh();
         if (TARGET_FOOTER_INDEX == 0) {
             minFT = 0;
-            maxFT = mDatas.get(offset).getAmount();
+            maxFT = mDatas.get(offset).getVolume();
         }
         for (int i = offset; i < maxWidthNum; i++) {
             QuotationBean mQuotationBean = mDatas.get(i);
@@ -524,8 +554,33 @@ public class KLineScollView extends BaseKlineBarView {
             maxKL = maxKL > mQuotationBean.getHigh() ? maxKL : mQuotationBean
                     .getHigh();
             if (TARGET_FOOTER_INDEX == 0) {
-                maxFT = maxFT > mQuotationBean.getAmount() ? maxFT : mQuotationBean
-                        .getAmount();
+                maxFT = maxFT > mQuotationBean.getVolume() ? maxFT : mQuotationBean
+                        .getVolume();
+                if (initVolumeData5 != null
+                        && initVolumeData5.length > i
+                        && initVolumeData5[i] > 0) {
+                    minKL = minKL < initVolumeData5[i] ? minKL
+                            : initVolumeData5[i];
+                    maxFT = maxKL > initVolumeData5[i] ? maxKL
+                            : initVolumeData5[i];
+                }
+                if (initVolumeData10 != null
+                        && initVolumeData10.length > i
+                        && initVolumeData10[i] > 0) {
+                    minKL = minKL < initVolumeData10[i] ? minKL
+                            : initVolumeData10[i];
+                    maxFT = maxKL > initVolumeData10[i] ? maxKL
+                            : initVolumeData10[i];
+                }
+                if (initVolumeData30 != null
+                        && initVolumeData30.length > i
+                        && initVolumeData30[i] > 0) {
+                    minKL = minKL < initVolumeData30[i] ? minKL
+                            : initVolumeData30[i];
+                    maxFT = maxKL > initVolumeData30[i] ? maxKL
+                            : initVolumeData30[i];
+                }
+
             }
             if (initAverageData5 != null
                     && initAverageData5.length > i

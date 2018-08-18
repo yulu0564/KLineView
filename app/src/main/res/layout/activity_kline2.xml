@@ -14,6 +14,6 @@
         app:kLWidthOld="8dp"
         app:maxKLwidth="60dp"
         app:minKLwidth="1dp"
-        app:targetFooterIndex="macd"
+        app:targetFooterIndex="vol"
         app:textDefaultColor="@android:color/white" />
 </LinearLayout>

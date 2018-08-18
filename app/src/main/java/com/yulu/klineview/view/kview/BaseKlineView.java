@@ -10,10 +10,8 @@ import android.util.AttributeSet;
 
 import com.yulu.klineview.R;
 import com.yulu.klineview.algorithm.BiasUtils;
-import com.yulu.klineview.algorithm.BollUtils;
 import com.yulu.klineview.algorithm.CciUtils;
 import com.yulu.klineview.algorithm.KdjUtils;
-import com.yulu.klineview.algorithm.MAUtils;
 import com.yulu.klineview.algorithm.MacdUtils;
 import com.yulu.klineview.algorithm.RsiUtils;
 import com.yulu.klineview.base.BaseStockView;
@@ -203,7 +201,7 @@ public abstract class BaseKlineView extends BaseStockView {
     protected abstract void drawTop(Canvas mCanvas, int indicateLineIndex);
 
     /**
-     * 绘制头部VOL等一些的内容，现在把vol改为了成交额
+     * 绘制头部VOL等一些的内容
      */
     protected void drawCenter(Canvas mCanvas, int indicateLineIndex) {
 
@@ -211,8 +209,8 @@ public abstract class BaseKlineView extends BaseStockView {
             switch (TARGET_FOOTER_INDEX) {
                 case 0:
                     double volume = mDatas.get(indicateLineIndex)
-                            .getAmount();
-                    String volumeStr = "成交额:" + NumberUtils.getTwoStepStr(volume);
+                            .getVolume();
+                    String volumeStr = "成交量:" + volume;
                     setText(volumeStr, bottomRect.left + dip2px(10) + offsetWidth, bottomRect.top + dip2px(12),
                             mCanvas, Paint.Align.LEFT, textDefaultColor, 10);
                     break;
