@@ -545,6 +545,30 @@ public class KLineStockView extends BaseKlineBarView {
             if (TARGET_FOOTER_INDEX == 0) {
                 maxFT = maxFT > mQuotationBean.getVolume() ? maxFT : mQuotationBean
                         .getVolume();
+                if (initVolumeData5 != null
+                        && initVolumeData5.length > i + deviant
+                        && initVolumeData5[i + deviant] > 0) {
+                    minKL = minKL < initVolumeData5[i + deviant] ? minKL
+                            : initVolumeData5[i + deviant];
+                    maxKL = maxKL > initVolumeData5[i + deviant] ? maxKL
+                            : initVolumeData5[i + deviant];
+                }
+                if (initVolumeData10 != null
+                        && initVolumeData10.length > i + deviant
+                        && initVolumeData10[i + deviant] > 0) {
+                    minKL = minKL < initVolumeData10[i + deviant] ? minKL
+                            : initVolumeData10[i + deviant];
+                    maxKL = maxKL > initVolumeData10[i + deviant] ? maxKL
+                            : initVolumeData10[i + deviant];
+                }
+                if (initVolumeData30 != null
+                        && initVolumeData30.length > i + deviant
+                        && initVolumeData30[i + deviant] > 0) {
+                    minKL = minKL < initVolumeData30[i + deviant] ? minKL
+                            : initVolumeData30[i + deviant];
+                    maxKL = maxKL > initVolumeData30[i + deviant] ? maxKL
+                            : initVolumeData30[i + deviant];
+                }
             }
             if (initAverageData5 != null
                     && initAverageData5.length > i + deviant

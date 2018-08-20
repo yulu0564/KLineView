@@ -4,15 +4,15 @@ import android.content.Context;
 import android.util.AttributeSet;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
-
-import com.yulu.klineview.view.kview.KLineScollView;
+import android.view.VelocityTracker;
+import android.widget.Scroller;
 
 /**
  * 分时K线图手势
  */
 public class TimeGestureScollView extends TimeScollView {
     protected GestureDetector mGestureDetector;
-
+    private Scroller mScroller;
 
     public TimeGestureScollView(Context context) {
         this(context, null);
@@ -29,6 +29,7 @@ public class TimeGestureScollView extends TimeScollView {
     @Override
     protected void initBaseKline(AttributeSet attrs) {
         mGestureDetector = new GestureDetector(mContext, new GestureListener());
+        mScroller = new Scroller(mContext);
         super.initBaseKline(attrs);
     }
 
@@ -42,6 +43,10 @@ public class TimeGestureScollView extends TimeScollView {
     }
 
     private double nLenStart = 0; // 手势缩放的时候使用
+    /**
+     * actionmove滑动的距离
+     */
+    private float mMoveDist;
 
     /**
      * 支持手势
@@ -71,6 +76,34 @@ public class TimeGestureScollView extends TimeScollView {
 
         } else {
             nLenStart = 0;
+//            final int action = event.getAction();
+//            float curX = event.getX();
+//            switch (action) {
+//                case MotionEvent.ACTION_DOWN:
+//                    getVelocityTracker();
+//                    mVelocityTracker.addMovement(event);
+//                    mMoveDist = curX;
+//                    break;
+//                case MotionEvent.ACTION_MOVE:
+//                    mVelocityTracker.addMovement(event);
+//                    mVelocityTracker.computeCurrentVelocity(100);//计算速度
+//                    break;
+//                case MotionEvent.ACTION_UP:
+//                    mMoveDist = curX - mMoveDist;
+//
+//                    if (Math.abs(mMoveDist) < ViewConfiguration.get(mContext).getScaledTouchSlop()) {//过滤点击不小心滑动
+//                        //如果是点击操作
+//                        //do something
+//                    } else {
+//                        //手势滑动之后继续滚动
+//                        float xVelocity = Math.abs(mVelocityTracker.getXVelocity());
+//                        if (xVelocity > 200) {
+//                            mScroller.startScroll(getScrollX(), getScrollY(), (int) -mMoveDist * 3, 0, 1000);
+//                        }
+//                    }
+//                    recycleVelocityTracker();
+//                    break;
+//            }
             mGestureDetector.onTouchEvent(event);
         }
         return true;
@@ -165,7 +198,7 @@ public class TimeGestureScollView extends TimeScollView {
                 }
                 onScrollTo(distanceX);
             }
-            return super.onScroll(e1, e2, distanceX, distanceY);
+            return true;
         }
 
         // 单击不滑动
@@ -207,9 +240,19 @@ public class TimeGestureScollView extends TimeScollView {
             return super.onSingleTapUp(e);
         }
 
+//        @Override
+//        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+//            if (Math.abs(e1.getX() - e2.getX()) > 300) {
+//                mScroller.startScroll(getScrollX(), getScrollY(), (int) ((e1.getX() - e2.getX()) * 10), 0, 1500);
+//                return true;
+//            } else {
+//                return false;
+//            }
+////            return super.onFling(e1, e2, velocityX, velocityY);
+//        }
     }
 
-    private void onScrollTo(float distanceX){
+    private void onScrollTo(float distanceX) {
         if (distanceX < 0) {
             // 往左滑动
             if (offsetWidth > 0) {
@@ -239,4 +282,36 @@ public class TimeGestureScollView extends TimeScollView {
         }
     }
 
+//    @Override
+//    public void computeScroll() {
+//        if (mScroller.computeScrollOffset()) {
+//            onScrollTo(mScroller.getCurrX()-getScrollX());
+//        }
+//        super.computeScroll();
+//    }
+
+    /**
+     * 获取速度追踪器
+     *
+     * @return
+     */
+    VelocityTracker mVelocityTracker;
+
+    private VelocityTracker getVelocityTracker() {
+        if (mVelocityTracker == null) {
+            mVelocityTracker = VelocityTracker.obtain();
+        }
+        return mVelocityTracker;
+    }
+
+    /**
+     * 回收速度追踪器
+     */
+    private void recycleVelocityTracker() {
+        if (mVelocityTracker != null) {
+            mVelocityTracker.clear();
+            mVelocityTracker.recycle();
+            mVelocityTracker = null;
+        }
+    }
 }

@@ -26,6 +26,7 @@ public class TimeLineActivity2 extends AppCompatActivity {
         Type resultType = new TypeToken<List<List<String>>>() {
         }.getType();
         List<List<String>> datas = new Gson().fromJson(a, resultType);
+        datas.addAll(datas);
         TimeAdapter timeAdapter = new TimeAdapter();
         timeAdapter.setData(datas);
 

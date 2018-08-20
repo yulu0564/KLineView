@@ -12,6 +12,8 @@ import com.yulu.klineview.R;
 import com.yulu.klineview.algorithm.BiasUtils;
 import com.yulu.klineview.algorithm.CciUtils;
 import com.yulu.klineview.algorithm.KdjUtils;
+import com.yulu.klineview.algorithm.MAUtils;
+import com.yulu.klineview.algorithm.MAVolumeUtils;
 import com.yulu.klineview.algorithm.MacdUtils;
 import com.yulu.klineview.algorithm.RsiUtils;
 import com.yulu.klineview.base.BaseStockView;
@@ -78,6 +80,11 @@ public abstract class BaseKlineView extends BaseStockView {
      * cci数据
      */
     protected Map<String, double[]> cciMap = null;
+
+
+    protected double[] initVolumeData5 = null;
+    protected double[] initVolumeData10 = null;
+    protected double[] initVolumeData30 = null;
 
 
     protected boolean isEnableLoadMore = true;
@@ -206,24 +213,65 @@ public abstract class BaseKlineView extends BaseStockView {
     protected void drawCenter(Canvas mCanvas, int indicateLineIndex) {
 
         if (mDatas.size() > indicateLineIndex) {
+            float x = bottomRect.left + offsetWidth;
+            float y = bottomRect.top + dip2px(12);
             switch (TARGET_FOOTER_INDEX) {
                 case 0:
                     double volume = mDatas.get(indicateLineIndex)
                             .getVolume();
-                    String volumeStr = "成交量:" + volume;
-                    setText(volumeStr, bottomRect.left + dip2px(10) + offsetWidth, bottomRect.top + dip2px(12),
+                    String volumeStr = "成交量:" + (int) volume;
+                    x = setTextR(volumeStr, x+ dip2px(10), y,
                             mCanvas, Paint.Align.LEFT, textDefaultColor, 10);
+                    String titleM5;
+                    String titleM10;
+                    String titleM30;
+                    titleM5 = "M" + TargetManager.getInstance().getMaDefault()[0] + ":";
+                    titleM10 = "M" + TargetManager.getInstance().getMaDefault()[1]
+                            + ":";
+                    titleM30 = "M" + TargetManager.getInstance().getMaDefault()[2]
+                            + ":";
+
+                    if (initVolumeData5 != null
+                            && initVolumeData5.length > indicateLineIndex
+                            && initVolumeData5[indicateLineIndex] > 0) {
+                        titleM5 = titleM5
+                                + NumberUtils.getTwoStep(initVolumeData5[indicateLineIndex]);
+                    } else {
+                        titleM5 = titleM5 + "--";
+                    }
+                    x = setTextR(titleM5, x+ dip2px(10), y, mCanvas, Paint.Align.LEFT, colorAvlData5, 10);
+                    if (initVolumeData10 != null
+                            && initVolumeData10.length > indicateLineIndex
+                            && initVolumeData10[indicateLineIndex] > 0) {
+                        titleM10 = titleM10
+                                + NumberUtils.getTwoStep(initVolumeData10[indicateLineIndex]);
+                    } else {
+                        titleM10 = titleM10 + "--";
+                    }
+                    x = setTextR(titleM10,
+                            x + dip2px(10), y, mCanvas, Paint.Align.LEFT,
+                            colorAvlData10, 10);
+                    if (initVolumeData30 != null
+                            && initVolumeData30.length > indicateLineIndex
+                            && initVolumeData30[indicateLineIndex] > 0) {
+                        titleM30 = titleM30
+                                + NumberUtils.getTwoStep(initVolumeData30[indicateLineIndex]);
+                    } else {
+                        titleM30 = titleM30 + "--";
+                    }
+                    setText(titleM30, x + dip2px(10),
+                            y, mCanvas, Paint.Align.LEFT,
+                            colorAvlData30, 10);
                     break;
                 case 1:
                     if (macdMap != null) {
                         double[] dea = macdMap.get(MacdUtils.MACD_DEA);
                         double[] diff = macdMap.get(MacdUtils.MACD_DIFF);
-                        float x = bottomRect.left + offsetWidth;
                         if (diff != null && diff.length >= indicateLineIndex) {
                             x = setTextR("DIF:"
                                             + NumberUtils.getTwoStep(diff[indicateLineIndex]),
                                     x + dip2px(10),
-                                    bottomRect.top + dip2px(12),
+                                    y,
                                     mCanvas,
                                     Paint.Align.LEFT,
                                     colorAvlData30,
@@ -233,7 +281,7 @@ public abstract class BaseKlineView extends BaseStockView {
                             setText("DEA:"
                                             + NumberUtils.getTwoStep(dea[indicateLineIndex]),
                                     x + dip2px(10),
-                                    bottomRect.top + dip2px(12),
+                                    y,
                                     mCanvas,
                                     Paint.Align.LEFT,
                                     colorAvlData10,
@@ -246,7 +294,6 @@ public abstract class BaseKlineView extends BaseStockView {
                         double[] k = kdjMap.get(KdjUtils.KDJ_K);
                         double[] d = kdjMap.get(KdjUtils.KDJ_D);
                         double[] j = kdjMap.get(KdjUtils.KDJ_J);
-                        float x = bottomRect.left + offsetWidth;
                         if (k != null && k.length >= indicateLineIndex) {
                             x = setTextR("K:" + NumberUtils.getTwoStep(k[indicateLineIndex] / 100.0f),
                                     x + dip2px(10),
@@ -260,7 +307,7 @@ public abstract class BaseKlineView extends BaseStockView {
                             x = setTextR("D:"
                                             + NumberUtils.getTwoStep(d[indicateLineIndex] / 100.0f),
                                     x + dip2px(10),
-                                    bottomRect.top + dip2px(12),
+                                    y,
                                     mCanvas,
                                     Paint.Align.LEFT,
                                     colorAvlData10,
@@ -270,7 +317,7 @@ public abstract class BaseKlineView extends BaseStockView {
                             x = setTextR("J:"
                                             + NumberUtils.getTwoStep(j[indicateLineIndex] / 100.0f),
                                     x + dip2px(10),
-                                    bottomRect.top + dip2px(12),
+                                    y,
                                     mCanvas,
                                     Paint.Align.LEFT,
                                     colorAvlData30,
@@ -283,13 +330,12 @@ public abstract class BaseKlineView extends BaseStockView {
                         double[] rsi6 = rsiMap.get(RsiUtils.RSI6);
                         double[] rsi12 = rsiMap.get(RsiUtils.RSI12);
                         double[] rsi24 = rsiMap.get(RsiUtils.RSI24);
-                        float x = bottomRect.left + offsetWidth;
                         if (rsi6 != null && rsi6.length >= indicateLineIndex) {
                             x = setTextR(TargetManager.getInstance().getRsiDefault()[0]
                                             + ":"
                                             + NumberUtils.getTwoStep(rsi6[indicateLineIndex] / 100.0f),
                                     x + dip2px(10),
-                                    bottomRect.top + dip2px(12),
+                                    y,
                                     mCanvas,
                                     Paint.Align.LEFT,
                                     colorAvlData5,
@@ -300,7 +346,7 @@ public abstract class BaseKlineView extends BaseStockView {
                                             + ":"
                                             + NumberUtils.getTwoStep(rsi12[indicateLineIndex] / 100.0f),
                                     x + dip2px(10),
-                                    bottomRect.top + dip2px(12),
+                                    y,
                                     mCanvas,
                                     Paint.Align.LEFT,
                                     colorAvlData10,
@@ -311,7 +357,7 @@ public abstract class BaseKlineView extends BaseStockView {
                                             + ":"
                                             + NumberUtils.getTwoStep(rsi24[indicateLineIndex] / 100.0f),
                                     x + dip2px(10),
-                                    bottomRect.top + dip2px(12),
+                                    y,
                                     mCanvas,
                                     Paint.Align.LEFT,
                                     colorAvlData30,
@@ -324,14 +370,13 @@ public abstract class BaseKlineView extends BaseStockView {
                         double[] bias6 = biasMap.get(BiasUtils.BIAS6);
                         double[] bias12 = biasMap.get(BiasUtils.BIAS12);
                         double[] bias24 = biasMap.get(BiasUtils.BIAS24);
-                        float x = bottomRect.left + offsetWidth;
                         if (bias6 != null && bias6.length >= indicateLineIndex) {
                             x = setTextR("b"
                                             + TargetManager.getInstance().getBiasDefault()[0]
                                             + ":"
                                             + NumberUtils.getTwoStep(bias6[indicateLineIndex] / 100.0f),
                                     x + dip2px(10),
-                                    bottomRect.top + dip2px(12),
+                                    y,
                                     mCanvas,
                                     Paint.Align.LEFT,
                                     colorAvlData5,
@@ -343,7 +388,7 @@ public abstract class BaseKlineView extends BaseStockView {
                                             + ":"
                                             + NumberUtils.getTwoStep(bias12[indicateLineIndex] / 100.0f),
                                     x + dip2px(10),
-                                    bottomRect.top + dip2px(12),
+                                    y,
                                     mCanvas,
                                     Paint.Align.LEFT,
                                     colorAvlData10,
@@ -356,7 +401,7 @@ public abstract class BaseKlineView extends BaseStockView {
                                             + ":"
                                             + NumberUtils.getTwoStep(bias24[indicateLineIndex] / 100.0f),
                                     x + dip2px(10),
-                                    bottomRect.top + dip2px(12),
+                                    y,
                                     mCanvas,
                                     Paint.Align.LEFT,
                                     colorAvlData30,
@@ -367,11 +412,10 @@ public abstract class BaseKlineView extends BaseStockView {
                 case 5:
                     if (cciMap != null) {
                         double[] cci = cciMap.get(CciUtils.CCI);
-                        float x = bottomRect.left + offsetWidth;
                         if (cci != null && cci.length > 0) {
                             setText("CCI:" + NumberUtils.getTwoStep(cci[cci.length - 1] / 100.0),
                                     x + dip2px(10),
-                                    bottomRect.top + dip2px(12),
+                                    y,
                                     mCanvas,
                                     Paint.Align.LEFT,
                                     colorAvlData5,
@@ -782,5 +826,21 @@ public abstract class BaseKlineView extends BaseStockView {
 
     public void setTIME_UNIT(int TIME_UNIT) {
         this.TIME_UNIT = TIME_UNIT;
+    }
+
+    protected void initVolueAverage() {
+        if (TARGET_FOOTER_INDEX == 0) {
+            int day5 = TargetManager.getInstance().getMaDefault()[0];
+            int day10 = TargetManager.getInstance().getMaDefault()[1];
+            int day30 = TargetManager.getInstance().getMaDefault()[2];
+            Map<String, double[]> averageVolumeMap;
+            averageVolumeMap = MAVolumeUtils.getInitAverageData(mDatas, day5,
+                    day10, day30);
+            if (averageVolumeMap != null) {
+                initVolumeData5 = averageVolumeMap.get(MAUtils.MA_5);
+                initVolumeData10 = averageVolumeMap.get(MAUtils.MA_10);
+                initVolumeData30 = averageVolumeMap.get(MAUtils.MA_30);
+            }
+        }
     }
 }

@@ -559,25 +559,19 @@ public class KLineScollView extends BaseKlineBarView {
                 if (initVolumeData5 != null
                         && initVolumeData5.length > i
                         && initVolumeData5[i] > 0) {
-                    minKL = minKL < initVolumeData5[i] ? minKL
-                            : initVolumeData5[i];
-                    maxFT = maxKL > initVolumeData5[i] ? maxKL
+                    maxFT = maxFT > initVolumeData5[i] ? maxFT
                             : initVolumeData5[i];
                 }
                 if (initVolumeData10 != null
                         && initVolumeData10.length > i
                         && initVolumeData10[i] > 0) {
-                    minKL = minKL < initVolumeData10[i] ? minKL
-                            : initVolumeData10[i];
-                    maxFT = maxKL > initVolumeData10[i] ? maxKL
+                    maxFT = maxFT > initVolumeData10[i] ? maxFT
                             : initVolumeData10[i];
                 }
                 if (initVolumeData30 != null
                         && initVolumeData30.length > i
                         && initVolumeData30[i] > 0) {
-                    minKL = minKL < initVolumeData30[i] ? minKL
-                            : initVolumeData30[i];
-                    maxFT = maxKL > initVolumeData30[i] ? maxKL
+                    maxFT = maxFT > initVolumeData30[i] ? maxFT
                             : initVolumeData30[i];
                 }
 

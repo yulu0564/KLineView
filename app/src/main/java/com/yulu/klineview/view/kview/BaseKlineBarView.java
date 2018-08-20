@@ -7,6 +7,7 @@ import android.util.AttributeSet;
 
 import com.yulu.klineview.algorithm.BollUtils;
 import com.yulu.klineview.algorithm.MAUtils;
+import com.yulu.klineview.algorithm.MAVolumeUtils;
 import com.yulu.klineview.model.TargetManager;
 import com.yulu.klineview.utils.NumberUtils;
 
@@ -22,10 +23,6 @@ public abstract class BaseKlineBarView extends BaseKlineView {
     protected double[] initAverageData5 = null;
     protected double[] initAverageData10 = null;
     protected double[] initAverageData30 = null;
-
-    protected double[] initVolumeData5 = null;
-    protected double[] initVolumeData10 = null;
-    protected double[] initVolumeData30 = null;
 
     public BaseKlineBarView(Context context) {
         this(context, null);
@@ -106,7 +103,6 @@ public abstract class BaseKlineBarView extends BaseKlineView {
 
     private void initAverage() {
         Map<String, double[]> averageMap = null;
-        Map<String, double[]> averageVolumeMap;
         int day5 = TargetManager.getInstance().getMaDefault()[0];
         int day10 = TargetManager.getInstance().getMaDefault()[1];
         int day30 = TargetManager.getInstance().getMaDefault()[2];
@@ -123,15 +119,7 @@ public abstract class BaseKlineBarView extends BaseKlineView {
             initAverageData10 = averageMap.get(MAUtils.MA_10);
             initAverageData30 = averageMap.get(MAUtils.MA_30);
         }
-
-        averageVolumeMap = MAUtils.getInitAverageData(mDatas, day5,
-                day10, day30);
-        if (averageVolumeMap != null) {
-            initVolumeData5 = averageVolumeMap.get(MAUtils.MA_5);
-            initVolumeData10 = averageVolumeMap.get(MAUtils.MA_10);
-            initVolumeData30 = averageVolumeMap.get(MAUtils.MA_30);
-        }
-
+        initVolueAverage();
     }
 
 

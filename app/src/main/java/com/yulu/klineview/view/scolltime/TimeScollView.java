@@ -82,6 +82,7 @@ public class TimeScollView extends BaseKlineView {
     protected void initData() {
         super.initData();
         initAverageData60 = MAUtils.calcAverageData(mDatas, 60);
+        initVolueAverage();
     }
 
     @Override
@@ -238,6 +239,7 @@ public class TimeScollView extends BaseKlineView {
         int indicateLineIndex = 0;
         float indicateLineY = 0;
         float lastY60 = -1;
+        float lastVoY5 = -1, lastVoY10 = -1, lastVoY30 = -1;
         lastX = -1; // 绘图时X的历史值
         float startX = bottomRect.left + offset * kLWidth;
 
@@ -314,6 +316,33 @@ public class TimeScollView extends BaseKlineView {
                 case 0:
                     // VOL图
                     mCanvas.drawRect(kLstartX, getCutoffFTY(volume), endX, bottomRect.bottom, mDrawPaint);
+                    float avgVoY5 = 0;
+                    float avgVoY10 = 0;
+                    float avgVoY30 = 0;
+                    if (initVolumeData5 != null
+                            && initVolumeData5.length > i) {
+                        avgVoY5 = getCutoffFTY((initVolumeData5[i]));
+                    }
+                    if (initVolumeData10 != null
+                            && initVolumeData10.length > i) {
+                        avgVoY10 = getCutoffFTY((initVolumeData10[i]));
+                    }
+                    if (initVolumeData30 != null
+                            && initVolumeData30.length > i) {
+                        avgVoY30 = getCutoffFTY((initVolumeData30[i]));
+                    }
+                    if (i != 0 && initVolumeData5[i - 1] > 0) {
+                        mCanvas.drawLine(lastX, lastVoY5, teamLastX, avgVoY5, avgY5Paint);
+                    }
+                    if (i != 0 && initVolumeData10[i - 1] > 0) {
+                        mCanvas.drawLine(lastX, lastVoY10, teamLastX, avgVoY10, avgY10Paint);
+                    }
+                    if (i != 0 && initVolumeData30[i - 1] > 0) {
+                        mCanvas.drawLine(lastX, lastVoY30, teamLastX, avgVoY30, avgY30Paint);
+                    }
+                    lastVoY5 = avgVoY5;
+                    lastVoY10 = avgVoY10;
+                    lastVoY30 = avgVoY30;
                     break;
                 case 1:
                     // 绘制MACD图
